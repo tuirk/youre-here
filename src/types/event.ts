@@ -1,23 +1,24 @@
-export interface TimeEvent {
+export interface Sentiment {
+  color: string;           // hex color derived by AI
+  intensity: number;       // 0-1 emotional strength
+  categories: string[];    // e.g. ["joy", "anxiety"]
+}
+
+export interface JournalEntry {
   id: string;
-  title: string;
-  description?: string; // Optional description field
-  tags?: string[]; // Optional array of tags
-  color: string;
-  intensity: number; // 1-10
-  startDate: Date;
-  endDate?: Date; // Optional end date for process events
-  dayOfYear?: number; // Optional day of year for more precise positioning
-  isRoughDate?: boolean; // Indicates if this is a seasonal rough date
-  roughDateSeason?: string; // The season (Spring, Summer, Fall, Winter)
-  roughDateYear?: number; // The year for the rough date
-  eventType: "one-time" | "process" | "journal"; // Explicit event type to differentiate visualization
+  text: string;                              // raw user input
+  createdAt: string;                         // ISO string — when they wrote it
+  anchorDate: string;                        // ISO string — where on the spiral
+  endDate?: string;                          // ISO string — if AI detects time range
+  sentiment?: Sentiment;                     // AI-derived, null until analyzed
+  temporalScope: "point" | "smear" | "forward";
+  summary?: string;                          // AI-generated region summary (Phase 3)
 }
 
 export interface SpiralConfig {
   startYear: number;
   currentYear: number;
-  firstUseDate: string; // ISO date string of when user first opened the app
+  firstUseDate: string;
   zoom: number;
   centerX: number;
   centerY: number;
