@@ -1,16 +1,14 @@
+import { JournalEntry, SpiralConfig } from "@/types/event";
 
-import { TimeEvent, SpiralConfig } from "@/types/event";
-
-const EVENTS_STORAGE_KEY = "youAreHere_events";
+const ENTRIES_STORAGE_KEY = "youAreHere_entries";
 const CONFIG_STORAGE_KEY = "youAreHere_config";
 const FIRST_USE_DATE_KEY = "youAreHere_firstUseDate";
 
+// --- First use date ---
+
 export const getFirstUseDate = (): Date => {
   const stored = localStorage.getItem(FIRST_USE_DATE_KEY);
-  if (stored) {
-    return new Date(stored);
-  }
-  // First time opening — record today
+  if (stored) return new Date(stored);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   localStorage.setItem(FIRST_USE_DATE_KEY, today.toISOString());
@@ -23,67 +21,51 @@ export const setFirstUseDate = (date: Date): void => {
   localStorage.setItem(FIRST_USE_DATE_KEY, d.toISOString());
 };
 
-export const saveEvents = (events: TimeEvent[]): void => {
-  const sanitizedEvents = events.map(event => ({
-    ...event,
-    startDate: event.startDate,
-    endDate: event.endDate,
-    id: event.id,
-    title: event.title || "Untitled Event",
-    intensity: typeof event.intensity === 'number' ? event.intensity : 5,
-    color: event.color || "#ffffff",
-    eventType: event.eventType || "one-time"
-  }));
+// --- Journal entries ---
 
-  localStorage.setItem(
-    EVENTS_STORAGE_KEY,
-    JSON.stringify(sanitizedEvents, (key, value) => {
-      return value instanceof Date ? value.toISOString() : value;
-    })
-  );
-
-  console.log(`Saved ${sanitizedEvents.length} events to localStorage`);
+export const saveEntries = (entries: JournalEntry[]): void => {
+  localStorage.setItem(ENTRIES_STORAGE_KEY, JSON.stringify(entries));
 };
 
-export const getEvents = (): TimeEvent[] => {
-  const storedEvents = localStorage.getItem(EVENTS_STORAGE_KEY);
-  if (!storedEvents) return [];
+export const getEntries = (): JournalEntry[] => {
+  const stored = localStorage.getItem(ENTRIES_STORAGE_KEY);
+  if (!stored) return [];
 
   try {
-    const parsed = JSON.parse(storedEvents);
-    const events = parsed.map((event: any) => ({
-      ...event,
-      startDate: new Date(event.startDate),
-      endDate: event.endDate ? new Date(event.endDate) : undefined,
-      dayOfYear: event.dayOfYear || undefined,
-      eventType: event.eventType || (event.endDate ? "process" : "one-time")
-    }));
-
-    console.log(`Loaded ${events.length} events from localStorage`);
-
-    return events.filter((event: TimeEvent) =>
-      event && event.id && event.startDate instanceof Date
-    );
+    const parsed = JSON.parse(stored);
+    return parsed.filter(
+      (e: any) => e && e.id && e.anchorDate && e.text !== undefined
+    ) as JournalEntry[];
   } catch (e) {
-    console.error("Failed to parse stored events:", e);
-    localStorage.removeItem(EVENTS_STORAGE_KEY);
+    console.error("Failed to parse stored entries:", e);
+    localStorage.removeItem(ENTRIES_STORAGE_KEY);
     return [];
   }
 };
 
-export const deleteEvent = (eventId: string): void => {
-  const events = getEvents();
-  const filteredEvents = events.filter(event => event.id !== eventId);
-  saveEvents(filteredEvents);
-  console.log(`Deleted event ${eventId}, ${filteredEvents.length} events remaining`);
+export const saveEntry = (entry: JournalEntry): void => {
+  const entries = getEntries();
+  entries.push(entry);
+  saveEntries(entries);
 };
+
+export const updateEntry = (updated: JournalEntry): void => {
+  const entries = getEntries().map((e) =>
+    e.id === updated.id ? updated : e
+  );
+  saveEntries(entries);
+};
+
+export const deleteEntry = (entryId: string): void => {
+  const entries = getEntries().filter((e) => e.id !== entryId);
+  saveEntries(entries);
+};
+
+// --- Config ---
 
 export const saveConfig = (config: Partial<SpiralConfig>): void => {
   const existingConfig = getConfig();
-  const updatedConfig = {
-    ...existingConfig,
-    ...config,
-  };
+  const updatedConfig = { ...existingConfig, ...config };
   localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(updatedConfig));
 };
 
