@@ -14,25 +14,22 @@ export const SpiralControls: React.FC<SpiralControlsProps> = ({
   hasEntries,
 }) => {
   return (
-    <div className="absolute top-4 right-4 flex flex-col items-end gap-3 bg-background/30 backdrop-blur-sm p-4 rounded-lg border border-white/10 shadow-lg">
-      <p className="text-xs text-white/30 max-w-[160px] text-right">
-        Click anywhere on the spiral to add an entry
-      </p>
+    <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
       <Button
-        variant="outline"
-        className="border-white/10 text-white/60 hover:bg-white/5"
+        variant="ghost"
+        className="text-white/40 hover:text-white/70 hover:bg-white/5 border border-white/[0.06] backdrop-blur-sm text-xs px-3 py-1.5 h-auto rounded-lg"
         onClick={onViewEntriesClick}
       >
-        <ListIcon className="mr-2 h-4 w-4" />
+        <ListIcon className="mr-1.5 h-3.5 w-3.5" />
         Entries
       </Button>
       {!hasEntries && (
         <Button
-          variant="outline"
-          className="border-white/10 text-white/40 hover:bg-white/5 text-xs"
+          variant="ghost"
+          className="text-white/25 hover:text-white/50 hover:bg-white/5 text-[10px] px-2 py-1 h-auto rounded-lg"
           onClick={onLoadSeedClick}
         >
-          Load demo data
+          Load demo
         </Button>
       )}
     </div>

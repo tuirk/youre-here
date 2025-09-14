@@ -51,13 +51,13 @@ When you submit an entry, Gemini analyzes your text for emotional content. It ha
 | Neutral, calm | Soft whites, grays |
 
 ### Temporal Understanding
-The AI reads time from your words:
+You place the entry on the spiral (the anchor date). The AI figures out how far the feeling extends from there:
 - *"today I felt..."* → a single point on the spiral
-- *"the past two weeks have been..."* → a colored smear across that time range
-- *"next month I'm nervous about..."* → diffuse, ghostly particles projected forward
+- *"since that day I've been..."* → a colored smear from the anchor to today
+- *"for the past two weeks..."* → smear from anchor forward to now
+- *"next month I'm nervous about..."* → diffuse, ghostly particles projected into the future
 
-### Region Summaries
-When you hover over a region of the spiral, you see an AI-generated summary of that period — warm, reflective, observational. Not clinical. Like a thoughtful friend looking back: *"A heavy week — you kept returning to the conversation with your mother. Some brightness around Wednesday when coffee with a friend broke through."*
+Anything beyond today renders lighter and more transparent — the future is ghostly, the past is vivid.
 
 ### Speech-to-Text
 Hit the microphone button and speak. Whisper transcribes your voice into text, so you can journal by thinking out loud — literally.
