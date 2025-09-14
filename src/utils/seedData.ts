@@ -110,6 +110,25 @@ export const generateSeedData = (): JournalEntry[] => {
       sentiment: { color: "#B0B0B0", intensity: 0.3, categories: ["neutral", "joy"] },
       temporalScope: "point",
     },
+    // Smear that reaches to today — "since" pattern
+    {
+      id: uuidv4(),
+      text: "since the reorg I've been in survival mode. every day feels the same. wake up, push through, crash.",
+      createdAt: day(-35),
+      anchorDate: day(-35),
+      endDate: day(0),
+      sentiment: { color: "#3ABFBF", intensity: 0.65, categories: ["anxiety", "sadness"] },
+      temporalScope: "smear",
+    },
+    // Recent anger
+    {
+      id: uuidv4(),
+      text: "got the email about the project being cancelled. six months of work just... gone. I'm furious.",
+      createdAt: day(-4),
+      anchorDate: day(-4),
+      sentiment: { color: "#D94040", intensity: 0.85, categories: ["anger"] },
+      temporalScope: "point",
+    },
     // Forward projections
     {
       id: uuidv4(),
