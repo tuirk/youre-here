@@ -85,7 +85,7 @@ export const useSpiralEntries = () => {
       return;
     }
 
-    const result = await analyzeEntry(entry.text, GEMINI_API_KEY);
+    const result = await analyzeEntry(entry.text, entry.anchorDate, GEMINI_API_KEY);
     if (!result) return;
 
     const color = mapSentimentToColor(result.categories, result.intensity);
@@ -98,14 +98,8 @@ export const useSpiralEntries = () => {
         categories: result.categories,
       },
       temporalScope: result.temporalScope,
+      endDate: result.endDate,
     };
-
-    if (result.endDateOffset && result.temporalScope !== "point") {
-      const anchor = new Date(entry.anchorDate);
-      const end = new Date(anchor);
-      end.setDate(end.getDate() + result.endDateOffset);
-      updated.endDate = end.toISOString();
-    }
 
     updateEntry(updated);
     setEntries((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
@@ -130,6 +124,17 @@ export const useSpiralEntries = () => {
     });
   }, [toast]);
 
+  const handleDeleteMultiple = useCallback((ids: string[]) => {
+    const idSet = new Set(ids);
+    const remaining = getEntries().filter((e) => !idSet.has(e.id));
+    saveEntries(remaining);
+    setEntries(remaining);
+    toast({
+      title: "Deleted",
+      description: `${ids.length} entries removed from your spiral`,
+    });
+  }, [toast]);
+
   return {
     entries,
     config,
@@ -141,6 +146,7 @@ export const useSpiralEntries = () => {
     handleTildePlaced,
     handleSaveEntry,
     handleDeleteEntry,
+    handleDeleteMultiple,
     loadSeedData,
     currentYear,
   };
