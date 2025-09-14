@@ -45,14 +45,10 @@ export const ParticleLayer: React.FC<ParticleLayerProps> = ({
       const pulse = Math.sin(time * pulseSpeed + pulsePhase) * pulseAmplitude;
       particleRef.current.scale.set(1 + pulse, 1 + pulse, 1 + pulse);
       
-      // Additional subtle noise movement along all axes
-      const noiseX = Math.sin(time * 0.3) * 0.001;
-      const noiseY = Math.cos(time * 0.3) * 0.001;
-      const noiseZ = Math.sin(time * 0.4) * 0.001;
-      
-      particleRef.current.position.x += noiseX;
-      particleRef.current.position.y += noiseY;
-      particleRef.current.position.z += noiseZ;
+      // Gentle sway — absolute position so it always returns to anchor
+      particleRef.current.position.x = Math.sin(time * 0.3) * 0.03;
+      particleRef.current.position.y = Math.cos(time * 0.25) * 0.03;
+      particleRef.current.position.z = Math.sin(time * 0.35) * 0.03;
     }
   });
   

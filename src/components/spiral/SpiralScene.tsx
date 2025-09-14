@@ -52,7 +52,7 @@ export const SpiralScene: React.FC<SpiralSceneProps> = ({
       />
 
       <color attach="background" args={["#010206"]} />
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0.5} fade speed={1} />
+      <Stars radius={100} depth={50} count={8000} factor={4} saturation={0.5} fade speed={1} />
 
       <ambientLight intensity={0.2} />
       <directionalLight position={[10, 10, 5]} intensity={0.4} />

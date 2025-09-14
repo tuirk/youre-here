@@ -5,13 +5,17 @@ import { ListIcon, Plus } from "lucide-react";
 interface SpiralControlsProps {
   onNewEntryClick: () => void;
   onViewEntriesClick: () => void;
+  onLoadSeedClick: () => void;
   placementActive: boolean;
+  hasEntries: boolean;
 }
 
 export const SpiralControls: React.FC<SpiralControlsProps> = ({
   onNewEntryClick,
   onViewEntriesClick,
+  onLoadSeedClick,
   placementActive,
+  hasEntries,
 }) => {
   return (
     <div className="absolute top-4 right-4 flex flex-col items-end gap-3 bg-background/30 backdrop-blur-sm p-4 rounded-lg border border-white/10 shadow-lg">
@@ -34,6 +38,15 @@ export const SpiralControls: React.FC<SpiralControlsProps> = ({
         <ListIcon className="mr-2 h-4 w-4" />
         Entries
       </Button>
+      {!hasEntries && (
+        <Button
+          variant="outline"
+          className="border-white/10 text-white/40 hover:bg-white/5 text-xs"
+          onClick={onLoadSeedClick}
+        >
+          Load demo data
+        </Button>
+      )}
     </div>
   );
 };

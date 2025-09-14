@@ -101,7 +101,7 @@ export const TildePlacement: React.FC<TildePlacementProps> = ({
         geometry={tubeGeometry}
         onClick={handleClick}
       >
-        <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
+        <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} depthWrite={false} colorWrite={false} />
       </mesh>
 
       {/* Tilde marker */}

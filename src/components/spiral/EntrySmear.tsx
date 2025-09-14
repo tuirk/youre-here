@@ -1,20 +1,21 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo } from "react";
 import { Line } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { JournalEntry } from "@/types/event";
-import { getDailySpiralCoords } from "@/utils/daily/generateDailySpiralPoints";
+import { calculateDailySegment } from "@/utils/daily/dailyDurationSegments";
+import { ParticleLayer } from "./particles/ParticleLayer";
+import { useGenerateParticles } from "./particles/ParticleGenerator";
 
 interface EntrySmearProps {
   entry: JournalEntry;
   firstUseDate: Date;
   zoom: number;
-  diffuse?: boolean; // true for forward projections (lighter, more transparent)
+  diffuse?: boolean;
 }
 
 /**
- * Renders a colored trail along the spiral for entries that span time.
- * Diffuse mode (forward projections) renders lighter and more transparent.
+ * Renders a rich 3-layer particle dust trail along the spiral for entries that span time.
+ * Diffuse mode (forward projections) uses lighter opacity.
  */
 export const EntrySmear: React.FC<EntrySmearProps> = ({
   entry,
@@ -24,102 +25,104 @@ export const EntrySmear: React.FC<EntrySmearProps> = ({
 }) => {
   const color = entry.sentiment?.color || "#aaaaaa";
   const intensity = entry.sentiment?.intensity ?? 0.5;
-  const groupRef = useRef<THREE.Group>(null);
 
-  const { points, particlePositions, particleSizes } = useMemo(() => {
-    const start = new Date(firstUseDate);
-    start.setHours(0, 0, 0, 0);
+  const anchorDate = new Date(entry.anchorDate);
+  const endDate = new Date(entry.endDate || entry.anchorDate);
 
-    const anchorDate = new Date(entry.anchorDate);
-    anchorDate.setHours(0, 0, 0, 0);
-    const endDate = new Date(entry.endDate || entry.anchorDate);
-    endDate.setHours(0, 0, 0, 0);
+  const spanLengthInDays = Math.max(1, Math.floor(
+    (endDate.getTime() - anchorDate.getTime()) / (1000 * 60 * 60 * 24)
+  ));
 
-    const startDay = Math.max(0, Math.floor((anchorDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-    const endDay = Math.max(startDay, Math.floor((endDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-    const span = Math.max(1, endDay - startDay);
+  const points = calculateDailySegment(
+    anchorDate,
+    endDate,
+    firstUseDate,
+    200 + Math.min(300, spanLengthInDays),
+    2 * zoom,
+    0.8 * zoom,
+    1.2 * zoom
+  );
 
-    // Generate smooth line points
-    const linePoints: THREE.Vector3[] = [];
-    const steps = Math.min(200, span * 4);
-    for (let i = 0; i <= steps; i++) {
-      const dayIndex = startDay + (i / steps) * span;
-      const { x, y, z } = getDailySpiralCoords(dayIndex, 2 * zoom, 0.8 * zoom, 1.2 * zoom);
-      linePoints.push(new THREE.Vector3(x, y, z));
-    }
+  const colorObj = new THREE.Color(color);
 
-    // Generate particle cloud around the line
-    const particleCount = Math.min(300, 50 + span * 5);
-    const positions = new Float32Array(particleCount * 3);
-    const sizes = new Float32Array(particleCount);
+  const particleCount = useMemo(() => {
+    const intensityFactor = 1.5 + (intensity * 10) * 0.4;
+    const lengthFactor = Math.min(1.2, Math.log10(spanLengthInDays) / 3 + 0.6);
+    const base = Math.floor(200 * intensityFactor * lengthFactor);
+    // Future/diffuse portions get fewer particles — sparser, ghostlier
+    return diffuse ? Math.floor(base * 0.5) : base;
+  }, [intensity, spanLengthInDays, diffuse]);
 
-    for (let i = 0; i < particleCount; i++) {
-      const t = Math.random();
-      const dayIndex = startDay + t * span;
-      const { x, y, z } = getDailySpiralCoords(dayIndex, 2 * zoom, 0.8 * zoom, 1.2 * zoom);
+  const backgroundCount = Math.floor(particleCount * 0.8);
+  const tertiaryCount = Math.floor(particleCount * 0.5);
 
-      // Scatter around the line
-      const spread = diffuse ? 0.3 : 0.15;
-      positions[i * 3] = x + (Math.random() - 0.5) * spread;
-      positions[i * 3 + 1] = y + (Math.random() - 0.5) * spread;
-      positions[i * 3 + 2] = z + (Math.random() - 0.5) * spread;
-
-      sizes[i] = (0.02 + Math.random() * 0.04) * (diffuse ? 1.5 : 1);
-    }
-
-    return { points: linePoints, particlePositions: positions, particleSizes: sizes };
-  }, [entry.anchorDate, entry.endDate, firstUseDate, zoom, diffuse]);
-
-  // Subtle shimmer animation
-  useFrame((state) => {
-    if (groupRef.current) {
-      const t = state.clock.getElapsedTime();
-      groupRef.current.children.forEach((child, i) => {
-        if (child instanceof THREE.Points) {
-          child.rotation.y = Math.sin(t * 0.3 + i) * 0.02;
-        }
-      });
-    }
+  const primaryParticles = useGenerateParticles({
+    color, intensity, points, particleCount,
+    isRoughDate: false, isMinimalDuration: false,
   });
 
-  const threeColor = new THREE.Color(color);
-  const opacity = diffuse ? 0.3 : 0.6;
-  const lineOpacity = diffuse ? 0.1 : 0.25;
+  const backgroundParticles = useGenerateParticles({
+    color, intensity, points, particleCount: backgroundCount,
+    isBackgroundLayer: true, isRoughDate: false, isMinimalDuration: false,
+  });
+
+  const tertiaryParticles = useGenerateParticles({
+    color, intensity, points, particleCount: tertiaryCount,
+    isTertiaryLayer: true, isRoughDate: false, isMinimalDuration: false,
+  });
+
+  const animationSpeed = 0.003 * (0.7 + intensity * 0.5);
+  const animationAmplitude = 0.01 * (0.7 + intensity * 0.5);
+
+  // Diffuse (future) — noticeably lighter but still visible
+  const opacityMult = diffuse ? 0.35 : 1;
 
   return (
-    <group ref={groupRef}>
-      {/* Subtle guide line */}
-      {points.length >= 2 && (
-        <Line
-          points={points}
-          color={threeColor}
-          lineWidth={0.8 + intensity * 0.5}
-          transparent
-          opacity={lineOpacity}
-          blending={THREE.AdditiveBlending}
-        />
-      )}
+    <group>
+      <Line
+        points={points}
+        color={colorObj}
+        lineWidth={0.6 + intensity * 0.8}
+        transparent
+        opacity={0.15 * opacityMult}
+        blending={THREE.AdditiveBlending}
+      />
 
-      {/* Particle cloud */}
-      <points>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={particlePositions.length / 3}
-            array={particlePositions}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <pointsMaterial
-          color={threeColor}
-          size={0.08 + intensity * 0.05}
-          transparent
-          opacity={opacity}
-          blending={THREE.AdditiveBlending}
-          sizeAttenuation
-          depthWrite={false}
-        />
-      </points>
+      <ParticleLayer
+        positions={primaryParticles.positions}
+        sizes={primaryParticles.sizes}
+        colors={primaryParticles.colors}
+        size={0.15}
+        opacity={0.9 * opacityMult}
+        rotationSpeed={animationSpeed}
+        pulseSpeed={0.2}
+        pulseAmplitude={animationAmplitude}
+      />
+
+      <ParticleLayer
+        positions={backgroundParticles.positions}
+        sizes={backgroundParticles.sizes}
+        colors={backgroundParticles.colors}
+        size={0.20}
+        opacity={0.7 * opacityMult}
+        isGlow={true}
+        rotationSpeed={animationSpeed * 0.7}
+        pulseSpeed={0.15}
+        pulsePhase={1}
+        pulseAmplitude={animationAmplitude * 1.2}
+      />
+
+      <ParticleLayer
+        positions={tertiaryParticles.positions}
+        sizes={tertiaryParticles.sizes}
+        colors={tertiaryParticles.colors}
+        size={0.18}
+        opacity={0.8 * opacityMult}
+        rotationSpeed={-animationSpeed * 0.4}
+        pulseSpeed={0.1}
+        pulsePhase={2}
+        pulseAmplitude={animationAmplitude * 1.5}
+      />
     </group>
   );
 };

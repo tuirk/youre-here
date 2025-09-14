@@ -20,6 +20,7 @@ const Spiral: React.FC = () => {
     handleStartPlacement,
     handleSaveEntry,
     handleDeleteEntry,
+    loadSeedData,
     currentYear,
   } = useSpiralEntries();
 
@@ -35,7 +36,9 @@ const Spiral: React.FC = () => {
       <SpiralControls
         onNewEntryClick={handleStartPlacement}
         onViewEntriesClick={() => setShowEntryLog(true)}
+        onLoadSeedClick={loadSeedData}
         placementActive={tildePlacementActive}
+        hasEntries={entries.length > 0}
       />
 
       <SpiralHelp viewType="annual" currentYear={currentYear} />

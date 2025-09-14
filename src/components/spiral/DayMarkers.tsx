@@ -48,7 +48,7 @@ export const DayMarkers: React.FC<DayMarkersProps> = ({
     });
 
     return { positions: emptyDays, count: emptyDays.length };
-  }, [firstUseDate, today, events, baseRadius, radiusGrowth, heightPerRev]);
+  }, [firstUseDate, today, entries, baseRadius, radiusGrowth, heightPerRev]);
 
   // Set instance transforms
   useMemo(() => {

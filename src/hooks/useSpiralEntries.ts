@@ -1,12 +1,34 @@
 import { useState, useEffect, useCallback } from "react";
 import { JournalEntry, SpiralConfig } from "@/types/event";
-import { saveEntry, getEntries, updateEntry, saveEntries, saveConfig, getConfig, deleteEntry, getFirstUseDate, setFirstUseDate } from "@/utils/storage";
+import { saveEntry, getEntries, updateEntry, saveEntries, saveConfig, getConfig, deleteEntry, setFirstUseDate } from "@/utils/storage";
 import { useToast } from "@/hooks/use-toast";
 import { analyzeEntry } from "@/services/gemini";
 import { mapSentimentToColor } from "@/utils/colorMapping";
 import { generateSeedData } from "@/utils/seedData";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+
+/**
+ * Find the earliest anchorDate across all entries.
+ */
+const findEarliestDate = (entries: JournalEntry[]): Date => {
+  return entries.reduce((min, e) => {
+    const d = new Date(e.anchorDate);
+    return d < min ? d : min;
+  }, new Date());
+};
+
+/**
+ * Seed demo entries + set firstUseDate to earliest entry.
+ * Returns the seeded entries.
+ */
+const seedAndConfigure = (entries: JournalEntry[]): void => {
+  const earliest = findEarliestDate(entries);
+  // IMPORTANT: set firstUseDate BEFORE calling getConfig(),
+  // because getConfig() reads firstUseDate internally.
+  setFirstUseDate(earliest);
+  saveEntries(entries);
+};
 
 export const useSpiralEntries = () => {
   const { toast } = useToast();
@@ -27,26 +49,30 @@ export const useSpiralEntries = () => {
   const [showEntryPopup, setShowEntryPopup] = useState(false);
   const [showEntryLog, setShowEntryLog] = useState(false);
 
+  const loadSeedData = useCallback(() => {
+    const seed = generateSeedData();
+    seedAndConfigure(seed);
+    setEntries(seed);
+    setConfig(getConfig()); // now reads the correct firstUseDate
+    toast({ title: "Demo loaded", description: `${seed.length} entries added to the spiral` });
+  }, [toast]);
+
   useEffect(() => {
+    // Clear legacy data formats
+    localStorage.removeItem("youAreHere_events");
+
     let savedEntries = getEntries();
 
-    // Seed demo data on first visit
+    // Auto-seed on first visit (or if all entries were deleted)
     if (savedEntries.length === 0) {
       const seed = generateSeedData();
-      saveEntries(seed);
+      seedAndConfigure(seed);
       savedEntries = seed;
-      // Set firstUseDate to earliest entry so the spiral spans the demo data
-      const earliest = seed.reduce((min, e) => {
-        const d = new Date(e.anchorDate);
-        return d < min ? d : min;
-      }, new Date());
-      setFirstUseDate(earliest);
     }
 
     setEntries(savedEntries);
-    getFirstUseDate();
-    const savedConfig = getConfig();
-    setConfig(savedConfig);
+    // getConfig reads firstUseDate from storage — which is now correct
+    setConfig(getConfig());
   }, []);
 
   const handleTildePlaced = useCallback((date: Date) => {
@@ -59,7 +85,6 @@ export const useSpiralEntries = () => {
     setTildePlacementActive(true);
   }, []);
 
-  // Analyze entry with Gemini in background, then update
   const runSentimentAnalysis = useCallback(async (entry: JournalEntry) => {
     if (!GEMINI_API_KEY) {
       console.warn("No VITE_GEMINI_API_KEY set — skipping sentiment analysis");
@@ -81,7 +106,6 @@ export const useSpiralEntries = () => {
       temporalScope: result.temporalScope,
     };
 
-    // If there's an endDateOffset, calculate the endDate
     if (result.endDateOffset && result.temporalScope !== "point") {
       const anchor = new Date(entry.anchorDate);
       const end = new Date(anchor);
@@ -94,16 +118,12 @@ export const useSpiralEntries = () => {
   }, []);
 
   const handleSaveEntry = useCallback((entry: JournalEntry) => {
-    // Save immediately with no sentiment (renders as neutral gray)
     saveEntry(entry);
     setEntries((prev) => [...prev, entry]);
-
     toast({
       title: "Saved",
       description: "Your entry has been added to the spiral",
     });
-
-    // Fire sentiment analysis in background — color fades in when ready
     runSentimentAnalysis(entry);
   }, [toast, runSentimentAnalysis]);
 
@@ -129,6 +149,7 @@ export const useSpiralEntries = () => {
     handleStartPlacement,
     handleSaveEntry,
     handleDeleteEntry,
+    loadSeedData,
     currentYear,
   };
 };

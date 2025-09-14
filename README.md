@@ -74,7 +74,7 @@ cp .env.example .env   # add your API keys
 npm run dev
 ```
 
-Open [http://localhost:8080](http://localhost:8080).
+Open [http://localhost:5174](http://localhost:5174).
 
 ### Environment Variables
 

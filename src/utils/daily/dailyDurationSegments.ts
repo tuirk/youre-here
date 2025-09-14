@@ -1,13 +1,12 @@
 import { Vector3 } from "three";
-import { TimeEvent } from "@/types/event";
 import { getDailySpiralCoords } from "./generateDailySpiralPoints";
 
 /**
- * Generates points for visualizing event durations on the daily spiral.
+ * Generates points for visualizing durations on the daily spiral.
  */
-export const calculateDailySpiralSegment = (
-  startEvent: TimeEvent,
-  endEvent: TimeEvent,
+export const calculateDailySegment = (
+  startDate: Date,
+  endDate: Date,
   firstUseDate: Date,
   segmentPoints: number = 100,
   baseRadius: number = 2,
@@ -17,13 +16,13 @@ export const calculateDailySpiralSegment = (
   const start = new Date(firstUseDate);
   start.setHours(0, 0, 0, 0);
 
-  const startDate = new Date(startEvent.startDate);
-  startDate.setHours(0, 0, 0, 0);
-  const endDate = new Date(endEvent.startDate || endEvent.endDate || startEvent.startDate);
-  endDate.setHours(0, 0, 0, 0);
+  const sd = new Date(startDate);
+  sd.setHours(0, 0, 0, 0);
+  const ed = new Date(endDate);
+  ed.setHours(0, 0, 0, 0);
 
-  const startDayIndex = Math.max(0, (startDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const endDayIndex = Math.max(startDayIndex, (endDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const startDayIndex = Math.max(0, (sd.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const endDayIndex = Math.max(startDayIndex, (ed.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
   const actualPoints = Math.min(500, segmentPoints);
   const points: Vector3[] = [];

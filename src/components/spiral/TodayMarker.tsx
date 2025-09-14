@@ -1,6 +1,7 @@
 import React, { useRef, useMemo } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
+import { SVGLoader } from "three-stdlib";
 import { getDailySpiralCoords } from "@/utils/daily/generateDailySpiralPoints";
 
 interface TodayMarkerProps {
@@ -11,9 +12,6 @@ interface TodayMarkerProps {
   heightPerRev?: number;
 }
 
-/**
- * Prominent pulsing marker at the tip of the spiral — "You are here."
- */
 export const TodayMarker: React.FC<TodayMarkerProps> = ({
   firstUseDate,
   today,
@@ -21,9 +19,7 @@ export const TodayMarker: React.FC<TodayMarkerProps> = ({
   radiusGrowth = 0.8,
   heightPerRev = 1.2,
 }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Sprite>(null);
-  const ringRef = useRef<THREE.Mesh>(null);
+  const innerRef = useRef<THREE.Group>(null);
 
   const position = useMemo(() => {
     const start = new Date(firstUseDate);
@@ -35,75 +31,61 @@ export const TodayMarker: React.FC<TodayMarkerProps> = ({
     return new THREE.Vector3(x, y, z);
   }, [firstUseDate, today, baseRadius, radiusGrowth, heightPerRev]);
 
-  const glowTexture = useMemo(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 128;
-    canvas.height = 128;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-      gradient.addColorStop(0, "rgba(255, 220, 150, 1)");
-      gradient.addColorStop(0.3, "rgba(255, 200, 100, 0.6)");
-      gradient.addColorStop(0.6, "rgba(255, 180, 80, 0.2)");
-      gradient.addColorStop(1, "rgba(255, 160, 60, 0)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 128, 128);
-    }
-    return new THREE.CanvasTexture(canvas);
-  }, []);
+  const svgData = useLoader(SVGLoader, "/floating-person.svg");
 
+  // Extrude shapes for 3D depth
+  const extrudeSettings = useMemo(() => ({
+    depth: 40,
+    bevelEnabled: true,
+    bevelThickness: 8,
+    bevelSize: 5,
+    bevelSegments: 3,
+  }), []);
+
+  const shapes = useMemo(() => {
+    const allShapes: THREE.Shape[] = [];
+    svgData.paths.forEach((path) => {
+      const pathShapes = SVGLoader.createShapes(path);
+      allShapes.push(...pathShapes);
+    });
+    return allShapes;
+  }, [svgData]);
+
+  // Gentle float — tightly constrained to stay near today's position
   useFrame((state) => {
-    const t = state.clock.getElapsedTime();
-    if (meshRef.current) {
-      const pulse = 1 + Math.sin(t * 2) * 0.2;
-      meshRef.current.scale.set(pulse, pulse, pulse);
-    }
-    if (glowRef.current) {
-      const glow = 1 + Math.sin(t * 1.5 + 0.5) * 0.25;
-      glowRef.current.scale.set(glow, glow, 1);
-    }
-    if (ringRef.current) {
-      ringRef.current.rotation.z = t * 0.5;
-      const ringPulse = 1 + Math.sin(t * 1.2) * 0.1;
-      ringRef.current.scale.set(ringPulse, ringPulse, ringPulse);
+    if (innerRef.current) {
+      const t = state.clock.getElapsedTime();
+      // Small vertical bob only — no wandering
+      innerRef.current.position.y = Math.sin(t * 0.6) * 0.04;
+      // Very subtle tilt, not rotation — stays facing camera
+      innerRef.current.rotation.z = Math.sin(t * 0.4) * 0.05;
     }
   });
 
   return (
     <group position={position}>
-      {/* Core sphere */}
-      <mesh ref={meshRef}>
-        <sphereGeometry args={[0.08, 16, 16]} />
-        <meshStandardMaterial
-          color="#FFD080"
-          emissive="#FFB040"
-          emissiveIntensity={2}
-          transparent
-          opacity={0.95}
-        />
-      </mesh>
+      <group ref={innerRef}>
+        {/* 3D extruded SVG figure */}
+        <group scale={[0.003, -0.003, 0.003]} position={[-0.9, 0.9, -0.06]}>
+          {shapes.map((shape, i) => (
+            <mesh key={i}>
+              <extrudeGeometry args={[shape, extrudeSettings]} />
+              <meshStandardMaterial
+                color="#FFD080"
+                emissive="#FFD080"
+                emissiveIntensity={2.5}
+                transparent
+                opacity={0.5}
+                side={THREE.DoubleSide}
+                depthWrite={false}
+              />
+            </mesh>
+          ))}
+        </group>
 
-      {/* Outer ring */}
-      <mesh ref={ringRef}>
-        <torusGeometry args={[0.15, 0.012, 16, 32]} />
-        <meshBasicMaterial
-          color="#FFD080"
-          transparent
-          opacity={0.4}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-
-      {/* Glow sprite */}
-      <sprite ref={glowRef} scale={[0.8, 0.8, 1]}>
-        <spriteMaterial
-          map={glowTexture}
-          color="#FFD080"
-          transparent
-          opacity={0.6}
-          blending={THREE.AdditiveBlending}
-        />
-      </sprite>
+        {/* Soft glow */}
+        <pointLight color="#FFD080" intensity={0.4} distance={2} decay={2} />
+      </group>
     </group>
   );
 };
