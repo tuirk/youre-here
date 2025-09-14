@@ -1,43 +1,44 @@
 import { JournalEntry } from "@/types/event";
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
 
 interface SentimentResult {
-  color: string;
-  intensity: number;
   categories: string[];
+  intensity: number;
   temporalScope: "point" | "smear" | "forward";
-  endDateOffset?: number; // days from anchor date
+  endDate?: string; // ISO date string — when the feeling ends
 }
 
-const SENTIMENT_PROMPT = `You are a sentiment analysis engine for a reflective journal app. Analyze the journal entry and return a JSON object with these fields:
+const buildSentimentPrompt = (anchorDate: string, todayDate: string) => `Sentiment analysis for a journal app. Anchor date: ${anchorDate}. Today: ${todayDate}.
 
-1. "categories": array of 1-3 emotion categories from this list: joy, sadness, anger, anxiety, love, hope, mixed, neutral
-2. "intensity": number 0.0-1.0 representing emotional strength (0.1 = barely there, 1.0 = overwhelming)
-3. "temporalScope": one of:
-   - "point" — a single moment or day
-   - "smear" — a feeling spanning time (e.g. "the past week", "since March")
-   - "forward" — anticipation about the future (e.g. "next month I'm worried about...")
-4. "endDateOffset": only if temporalScope is "smear" or "forward", the number of days the feeling spans (negative for past, positive for future). For example "the past week" = -7, "next month" = 30.
+Return JSON with these EXACT fields:
+- "categories": 1-3 from ONLY these: joy, sadness, anger, anxiety, love, hope, mixed, neutral
+- "intensity": 0.0-1.0 emotional strength
+- "temporalScope": "point" (single day), "smear" (spans time), or "forward" (future anticipation)
+- "endDate": ISO date string (only for smear/forward)
 
-Rules:
-- Handle nuance: "I keep telling myself it's fine but I can't sleep" is anxiety, NOT joy
-- Mixed emotions are valid: someone can feel joy AND sadness simultaneously
-- "neutral" is for genuinely flat entries, not for entries you're unsure about
-- Intensity should reflect the emotional weight of the writing, not just whether emotions are named
+Temporal rules — the anchor date is where the user placed it, never change it:
+- "since that day" / "since then" / "been feeling" → smear, endDate = ${todayDate}
+- "for X weeks/months" → smear, endDate = ${todayDate}
+- "until X" → smear, endDate = when X happened
+- "next month" / "upcoming" → forward, endDate = anchor + estimated days
+- No temporal language → point, no endDate
 
-Return ONLY valid JSON, no markdown, no explanation.
-
-Example input: "today was rough. got into it with my boss again but then sarah called and honestly that made everything better"
-Example output: {"categories":["anger","love"],"intensity":0.7,"temporalScope":"point"}
-
-Example input: "the past two weeks have been this slow dread about the move"
-Example output: {"categories":["anxiety"],"intensity":0.6,"temporalScope":"smear","endDateOffset":-14}`;
+Sentiment rules:
+- "it's fine but I can't sleep" = anxiety not joy
+- Mixed emotions valid (joy + sadness)
+- Intensity = emotional weight of writing, not just named emotions`;
 
 export const analyzeEntry = async (
   text: string,
+  anchorDate: string,
   apiKey: string
 ): Promise<SentimentResult | null> => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().slice(0, 10);
+  const anchorStr = new Date(anchorDate).toISOString().slice(0, 10);
+
   try {
     const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
       method: "POST",
@@ -46,14 +47,15 @@ export const analyzeEntry = async (
         contents: [
           {
             parts: [
-              { text: SENTIMENT_PROMPT },
+              { text: buildSentimentPrompt(anchorStr, todayStr) },
               { text: `Journal entry:\n"${text}"` },
             ],
           },
         ],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 256,
+          maxOutputTokens: 512,
+          responseMimeType: "application/json",
         },
       }),
     });
@@ -64,22 +66,20 @@ export const analyzeEntry = async (
     }
 
     const data = await response.json();
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!rawText) return null;
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const textPart = parts.find((p: any) => p.text)?.text;
+    if (!textPart) return null;
 
-    // Strip markdown fences if present
-    const cleaned = rawText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    const parsed = JSON.parse(cleaned) as SentimentResult;
+    const cleaned = textPart.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const parsed = JSON.parse(cleaned);
 
-    // Validate
     if (!parsed.categories || typeof parsed.intensity !== "number") return null;
 
     return {
       categories: parsed.categories,
       intensity: Math.max(0, Math.min(1, parsed.intensity)),
       temporalScope: parsed.temporalScope || "point",
-      endDateOffset: parsed.endDateOffset,
-      color: "", // filled by color mapping
+      endDate: parsed.endDate || undefined,
     };
   } catch (e) {
     console.error("Gemini analysis failed:", e);
