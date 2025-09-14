@@ -4,6 +4,7 @@ import EntryPopup from "@/components/journal/EntryPopup";
 import EntryLog from "@/components/journal/EntryLog";
 import { SpiralControls } from "@/components/spiral/SpiralControls";
 import { SpiralHelp } from "@/components/spiral/SpiralHelp";
+import { RegionTooltip } from "@/components/spiral/RegionTooltip";
 import { useSpiralEntries } from "@/hooks/useSpiralEntries";
 
 const Spiral: React.FC = () => {
@@ -19,6 +20,8 @@ const Spiral: React.FC = () => {
     handleSaveEntry,
     handleDeleteEntry,
     handleDeleteMultiple,
+    handleHover,
+    hoverInfo,
     loadSeedData,
     currentYear,
   } = useSpiralEntries();
@@ -29,6 +32,7 @@ const Spiral: React.FC = () => {
         entries={entries}
         config={config}
         onTildePlaced={handleTildePlaced}
+        onHover={handleHover}
       />
 
       <SpiralControls
@@ -38,6 +42,18 @@ const Spiral: React.FC = () => {
       />
 
       <SpiralHelp viewType="annual" currentYear={currentYear} />
+
+      {hoverInfo && (
+        <RegionTooltip
+          visible={true}
+          x={hoverInfo.x}
+          y={hoverInfo.y}
+          dateLabel={hoverInfo.dateLabel}
+          summary={hoverInfo.summary}
+          loading={hoverInfo.loading}
+          entryCount={hoverInfo.entryCount}
+        />
+      )}
 
       <EntryLog
         entries={entries}

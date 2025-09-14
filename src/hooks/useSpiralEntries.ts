@@ -1,12 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { JournalEntry, SpiralConfig } from "@/types/event";
 import { saveEntry, getEntries, updateEntry, saveEntries, saveConfig, getConfig, deleteEntry, setFirstUseDate } from "@/utils/storage";
 import { useToast } from "@/hooks/use-toast";
-import { analyzeEntry } from "@/services/gemini";
+import { analyzeEntry, generateRegionSummary } from "@/services/gemini";
 import { mapSentimentToColor } from "@/utils/colorMapping";
 import { generateSeedData } from "@/utils/seedData";
+import { HoverInfo } from "@/components/spiral/TildePlacement";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+const DAY_MS = 1000 * 60 * 60 * 24;
+const REGION_RADIUS_DAYS = 14;
 
 /**
  * Find the earliest anchorDate across all entries.
@@ -81,7 +84,7 @@ export const useSpiralEntries = () => {
 
   const runSentimentAnalysis = useCallback(async (entry: JournalEntry) => {
     if (!GEMINI_API_KEY) {
-      console.warn("No VITE_GEMINI_API_KEY set — skipping sentiment analysis");
+      // No API key — skip analysis
       return;
     }
 
@@ -135,6 +138,69 @@ export const useSpiralEntries = () => {
     });
   }, [toast]);
 
+  // --- Hover summary ---
+  const [hoverInfo, setHoverInfo] = useState<{
+    x: number;
+    y: number;
+    dateLabel: string;
+    summary: string | null;
+    loading: boolean;
+    entryCount: number;
+  } | null>(null);
+
+  const summaryCache = useRef<Map<string, string>>(new Map());
+
+  const handleHover = useCallback((info: HoverInfo | null) => {
+    if (!info) {
+      setHoverInfo(null);
+      return;
+    }
+
+    const hoveredTime = info.date.getTime();
+    const nearby = entries.filter((e) => {
+      const anchorTime = new Date(e.anchorDate).getTime();
+      return Math.abs(anchorTime - hoveredTime) < REGION_RADIUS_DAYS * DAY_MS;
+    });
+
+    if (nearby.length === 0) {
+      setHoverInfo(null);
+      return;
+    }
+
+    // Approximate date label — "around early/mid/late Month Year"
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const d = info.date;
+    const dayOfMonth = d.getDate();
+    const phase = dayOfMonth <= 10 ? "early" : dayOfMonth <= 20 ? "mid" : "late";
+    const dateLabel = `Around ${phase} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+    // Cache key = sorted entry IDs
+    const cacheKey = nearby.map((e) => e.id).sort().join(",");
+    const cached = summaryCache.current.get(cacheKey);
+
+    if (cached) {
+      setHoverInfo({ x: info.screenX, y: info.screenY, dateLabel, summary: cached, loading: false, entryCount: nearby.length });
+      return;
+    }
+
+    // Show tooltip immediately with loading state
+    setHoverInfo({ x: info.screenX, y: info.screenY, dateLabel, summary: null, loading: true, entryCount: nearby.length });
+
+    // Generate summary in background
+    if (GEMINI_API_KEY) {
+      generateRegionSummary(nearby, GEMINI_API_KEY).then((summary) => {
+        if (summary) {
+          summaryCache.current.set(cacheKey, summary);
+          setHoverInfo((prev) => prev ? { ...prev, summary, loading: false } : null);
+        } else {
+          setHoverInfo((prev) => prev ? { ...prev, loading: false } : null);
+        }
+      });
+    } else {
+      setHoverInfo((prev) => prev ? { ...prev, loading: false } : null);
+    }
+  }, [entries]);
+
   return {
     entries,
     config,
@@ -147,6 +213,8 @@ export const useSpiralEntries = () => {
     handleSaveEntry,
     handleDeleteEntry,
     handleDeleteMultiple,
+    handleHover,
+    hoverInfo,
     loadSeedData,
     currentYear,
   };

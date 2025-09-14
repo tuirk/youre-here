@@ -59,6 +59,9 @@ You place the entry on the spiral (the anchor date). The AI figures out how far 
 
 Anything beyond today renders lighter and more transparent — the future is ghostly, the past is vivid.
 
+### Region Summaries
+Hover over any part of the spiral and the AI reflects on that time period — a warm, observational summary of what you were going through. Summaries are generated once and cached, so re-hovering feels instant.
+
 ### Speech-to-Text
 Hit the microphone button and speak. Whisper transcribes your voice into text, so you can journal by thinking out loud — literally.
 

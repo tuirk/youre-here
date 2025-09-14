@@ -1,37 +1,42 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import { getDailySpiralCoords } from "@/utils/daily/generateDailySpiralPoints";
+
+export interface HoverInfo {
+  date: Date;
+  screenX: number;
+  screenY: number;
+}
 
 interface TildePlacementProps {
   firstUseDate: Date;
   today: Date;
   zoom: number;
   onPlaced: (date: Date) => void;
+  onHover: (info: HoverInfo | null) => void;
 }
 
-/**
- * Always-active click target around the spiral.
- * Click anywhere on the spiral → tilde appears → popup opens.
- * No activation step needed.
- */
 export const TildePlacement: React.FC<TildePlacementProps> = ({
   firstUseDate,
   today,
   zoom,
   onPlaced,
+  onHover,
 }) => {
   const [tildePos, setTildePos] = useState<THREE.Vector3 | null>(null);
   const [tildeDate, setTildeDate] = useState<Date | null>(null);
+  const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Wider tube for easier clicking
-  const tubeGeometry = React.useMemo(() => {
+  const totalDays = React.useMemo(() => {
     const start = new Date(firstUseDate);
     start.setHours(0, 0, 0, 0);
     const end = new Date(today);
     end.setHours(0, 0, 0, 0);
-    const totalDays = Math.max(1, Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    return Math.max(1, Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+  }, [firstUseDate, today]);
 
+  const tubeGeometry = React.useMemo(() => {
     const curvePoints: THREE.Vector3[] = [];
     const steps = Math.max(10, totalDays * 2);
     for (let i = 0; i <= steps; i++) {
@@ -39,57 +44,67 @@ export const TildePlacement: React.FC<TildePlacementProps> = ({
       const { x, y, z } = getDailySpiralCoords(dayIndex, 2 * zoom, 0.8 * zoom, 1.2 * zoom);
       curvePoints.push(new THREE.Vector3(x, y, z));
     }
-
     const curve = new THREE.CatmullRomCurve3(curvePoints);
-    // Wider tube (0.6) for easier click targeting
     return new THREE.TubeGeometry(curve, steps, 0.6, 8, false);
-  }, [firstUseDate, today, zoom]);
+  }, [totalDays, zoom]);
 
-  const handleClick = useCallback(
-    (e: any) => {
-      if (!e.point) return;
-      e.stopPropagation();
-
-      const clickPoint = e.point as THREE.Vector3;
-
-      const start = new Date(firstUseDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(today);
-      end.setHours(0, 0, 0, 0);
-      const totalDays = Math.max(1, Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-
-      // Sample every day to find closest
-      let bestDist = Infinity;
-      let bestDay = 0;
-
-      for (let d = 0; d <= totalDays; d++) {
-        const { x, y, z } = getDailySpiralCoords(d, 2 * zoom, 0.8 * zoom, 1.2 * zoom);
-        const dist = clickPoint.distanceTo(new THREE.Vector3(x, y, z));
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestDay = d;
-        }
+  // Find nearest date from a 3D point
+  const findNearestDate = useCallback((point: THREE.Vector3): Date => {
+    const start = new Date(firstUseDate);
+    start.setHours(0, 0, 0, 0);
+    let bestDist = Infinity;
+    let bestDay = 0;
+    // Sample every 2 days for speed on hover, every day on click
+    const step = 1;
+    for (let d = 0; d <= totalDays; d += step) {
+      const { x, y, z } = getDailySpiralCoords(d, 2 * zoom, 0.8 * zoom, 1.2 * zoom);
+      const dist = point.distanceTo(new THREE.Vector3(x, y, z));
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestDay = d;
       }
+    }
+    const date = new Date(start);
+    date.setDate(date.getDate() + bestDay);
+    return date;
+  }, [firstUseDate, totalDays, zoom]);
 
-      const { x, y, z } = getDailySpiralCoords(bestDay, 2 * zoom, 0.8 * zoom, 1.2 * zoom);
-      const pos = new THREE.Vector3(x, y, z);
+  const handleClick = useCallback((e: any) => {
+    if (!e.point) return;
+    e.stopPropagation();
+    const date = findNearestDate(e.point);
+    const { x, y, z } = getDailySpiralCoords(
+      Math.floor((date.getTime() - new Date(firstUseDate).getTime()) / (1000 * 60 * 60 * 24)),
+      2 * zoom, 0.8 * zoom, 1.2 * zoom
+    );
+    setTildePos(new THREE.Vector3(x, y, z));
+    setTildeDate(date);
+    onPlaced(date);
+  }, [findNearestDate, firstUseDate, zoom, onPlaced]);
 
-      const date = new Date(start);
-      date.setDate(date.getDate() + bestDay);
+  const handlePointerMove = useCallback((e: any) => {
+    if (!e.point) return;
+    // Debounce hover
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    hoverTimeout.current = setTimeout(() => {
+      const date = findNearestDate(e.point);
+      // Get screen position from the pointer event
+      const screenX = (e as any).clientX ?? (e as any).nativeEvent?.clientX ?? 0;
+      const screenY = (e as any).clientY ?? (e as any).nativeEvent?.clientY ?? 0;
+      onHover({ date, screenX, screenY });
+    }, 150);
+  }, [findNearestDate, onHover]);
 
-      setTildePos(pos);
-      setTildeDate(date);
-      onPlaced(date);
-    },
-    [firstUseDate, today, zoom, onPlaced]
-  );
+  const handlePointerLeave = useCallback(() => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    onHover(null);
+  }, [onHover]);
 
   const formatDate = (d: Date) => {
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     return `~ ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
   };
 
-  // Clear tilde after a few seconds
   React.useEffect(() => {
     if (!tildePos) return;
     const timer = setTimeout(() => {
@@ -104,6 +119,8 @@ export const TildePlacement: React.FC<TildePlacementProps> = ({
       <mesh
         geometry={tubeGeometry}
         onClick={handleClick}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
       >
         <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
       </mesh>

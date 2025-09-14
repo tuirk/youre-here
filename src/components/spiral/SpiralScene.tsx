@@ -13,12 +13,14 @@ interface SpiralSceneProps {
   entries: JournalEntry[];
   config: SpiralConfig;
   onTildePlaced: (date: Date) => void;
+  onHover: (info: import("./TildePlacement").HoverInfo | null) => void;
 }
 
 export const SpiralScene: React.FC<SpiralSceneProps> = ({
   entries,
   config,
   onTildePlaced,
+  onHover,
 }) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
@@ -88,6 +90,7 @@ export const SpiralScene: React.FC<SpiralSceneProps> = ({
         today={today}
         zoom={config.zoom}
         onPlaced={onTildePlaced}
+        onHover={onHover}
       />
 
       <EntryVisualizations

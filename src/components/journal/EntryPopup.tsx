@@ -88,7 +88,7 @@ const EntryPopup: React.FC<EntryPopupProps> = ({
         }
       } else {
         // Fallback: use Web Speech API recognition
-        console.warn("No VITE_GROQ_API_KEY set — speech-to-text unavailable");
+        // Groq key not set — speech-to-text unavailable
       }
     } catch (err) {
       console.error("Transcription failed:", err);

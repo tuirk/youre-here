@@ -2,17 +2,20 @@ import React from "react";
 import { Canvas } from "@react-three/fiber";
 import { JournalEntry, SpiralConfig } from "@/types/event";
 import { SpiralScene } from "./SpiralScene";
+import { HoverInfo } from "./TildePlacement";
 
 interface SpiralVisualizationProps {
   entries: JournalEntry[];
   config: SpiralConfig;
   onTildePlaced: (date: Date) => void;
+  onHover: (info: HoverInfo | null) => void;
 }
 
 const SpiralVisualization: React.FC<SpiralVisualizationProps> = ({
   entries,
   config,
   onTildePlaced,
+  onHover,
 }) => {
   return (
     <div className="w-full h-full">
@@ -45,6 +48,7 @@ const SpiralVisualization: React.FC<SpiralVisualizationProps> = ({
           entries={entries}
           config={config}
           onTildePlaced={onTildePlaced}
+          onHover={onHover}
         />
       </Canvas>
     </div>
