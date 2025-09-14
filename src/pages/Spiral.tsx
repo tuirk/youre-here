@@ -18,6 +18,7 @@ const Spiral: React.FC = () => {
     handleTildePlaced,
     handleSaveEntry,
     handleDeleteEntry,
+    handleDeleteMultiple,
     loadSeedData,
     currentYear,
   } = useSpiralEntries();
@@ -43,6 +44,7 @@ const Spiral: React.FC = () => {
         open={showEntryLog}
         onOpenChange={setShowEntryLog}
         onDeleteEntry={handleDeleteEntry}
+        onDeleteMultiple={handleDeleteMultiple}
       />
 
       <EntryPopup
