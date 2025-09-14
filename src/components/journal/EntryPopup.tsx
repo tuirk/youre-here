@@ -121,21 +121,21 @@ const EntryPopup: React.FC<EntryPopupProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg bg-background/95 backdrop-blur-md border-white/10 max-h-[80vh]">
+      <DialogContent className="sm:max-w-2xl !bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 max-h-[85vh] rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg font-light tracking-wider text-white/80">
+          <DialogTitle className="text-2xl font-extralight tracking-[0.15em] text-white/70">
             {anchorDate ? formatDateLabel(anchorDate) : "New Entry"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="py-4">
+        <div className="py-6">
           <div className="relative">
             <Textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={transcribing ? "Transcribing..." : "What's on your mind..."}
-              className="min-h-[120px] bg-white/5 border-white/10 text-white placeholder:text-white/30 resize-none focus:border-white/20 pr-12"
+              className="min-h-[180px] bg-white/5 border-white/[0.06] text-white/90 text-base leading-relaxed placeholder:text-white/20 resize-none focus:border-white/15 focus:ring-0 pr-14 rounded-xl"
               autoFocus
               disabled={transcribing}
             />
@@ -144,28 +144,28 @@ const EntryPopup: React.FC<EntryPopupProps> = ({
               size="icon"
               onClick={recording ? stopRecording : startRecording}
               disabled={transcribing}
-              className={`absolute bottom-2 right-2 h-8 w-8 rounded-full ${
+              className={`absolute bottom-3 right-3 h-9 w-9 rounded-full ${
                 recording
                   ? "text-red-400 bg-red-400/20 animate-pulse"
-                  : "text-white/30 hover:text-white/60"
+                  : "text-white/20 hover:text-white/50 hover:bg-white/5"
               }`}
             >
               {recording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
           </div>
-          <p className="text-xs text-white/20 mt-2">
+          <p className="text-xs text-white/15 mt-3 tracking-wide">
             Ctrl+Enter to save{transcribing ? " · transcribing..." : ""}
           </p>
         </div>
 
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose} className="text-white/50">
+        <div className="flex justify-end gap-3">
+          <Button variant="ghost" onClick={onClose} className="text-white/30 hover:text-white/50 hover:bg-transparent">
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={!text.trim() || transcribing}
-            className="bg-white/10 hover:bg-white/20 text-white border border-white/10"
+            className="bg-white/8 hover:bg-white/12 text-white/70 border border-white/[0.06] rounded-lg px-6"
           >
             Save
           </Button>

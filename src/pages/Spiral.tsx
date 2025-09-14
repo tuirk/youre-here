@@ -10,14 +10,12 @@ const Spiral: React.FC = () => {
   const {
     entries,
     config,
-    tildePlacementActive,
     anchorDate,
     showEntryPopup,
     setShowEntryPopup,
     showEntryLog,
     setShowEntryLog,
     handleTildePlaced,
-    handleStartPlacement,
     handleSaveEntry,
     handleDeleteEntry,
     loadSeedData,
@@ -29,15 +27,12 @@ const Spiral: React.FC = () => {
       <SpiralVisualization
         entries={entries}
         config={config}
-        tildePlacementActive={tildePlacementActive}
         onTildePlaced={handleTildePlaced}
       />
 
       <SpiralControls
-        onNewEntryClick={handleStartPlacement}
         onViewEntriesClick={() => setShowEntryLog(true)}
         onLoadSeedClick={loadSeedData}
-        placementActive={tildePlacementActive}
         hasEntries={entries.length > 0}
       />
 

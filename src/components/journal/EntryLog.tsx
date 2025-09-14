@@ -29,9 +29,9 @@ const EntryLog: React.FC<EntryLogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background/95 backdrop-blur-md text-white border-white/10 max-w-2xl">
+      <DialogContent className="!bg-black/40 backdrop-blur-xl text-white border-white/10 max-w-2xl rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-light tracking-wider">Your Entries</DialogTitle>
+          <DialogTitle className="text-2xl font-extralight tracking-[0.15em] text-white/70">Your Entries</DialogTitle>
           <DialogDescription className="text-white/30">
             {entries.length} {entries.length === 1 ? "entry" : "entries"} on your spiral
           </DialogDescription>

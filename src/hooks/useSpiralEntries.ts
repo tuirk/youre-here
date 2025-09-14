@@ -44,7 +44,6 @@ export const useSpiralEntries = () => {
     centerY: window.innerHeight / 2,
   });
 
-  const [tildePlacementActive, setTildePlacementActive] = useState(false);
   const [anchorDate, setAnchorDate] = useState<Date | null>(null);
   const [showEntryPopup, setShowEntryPopup] = useState(false);
   const [showEntryLog, setShowEntryLog] = useState(false);
@@ -78,11 +77,6 @@ export const useSpiralEntries = () => {
   const handleTildePlaced = useCallback((date: Date) => {
     setAnchorDate(date);
     setShowEntryPopup(true);
-    setTildePlacementActive(false);
-  }, []);
-
-  const handleStartPlacement = useCallback(() => {
-    setTildePlacementActive(true);
   }, []);
 
   const runSentimentAnalysis = useCallback(async (entry: JournalEntry) => {
@@ -139,14 +133,12 @@ export const useSpiralEntries = () => {
   return {
     entries,
     config,
-    tildePlacementActive,
     anchorDate,
     showEntryPopup,
     setShowEntryPopup,
     showEntryLog,
     setShowEntryLog,
     handleTildePlaced,
-    handleStartPlacement,
     handleSaveEntry,
     handleDeleteEntry,
     loadSeedData,

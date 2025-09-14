@@ -2,19 +2,16 @@ import React from "react";
 import { Canvas } from "@react-three/fiber";
 import { JournalEntry, SpiralConfig } from "@/types/event";
 import { SpiralScene } from "./SpiralScene";
-import * as THREE from "three";
 
 interface SpiralVisualizationProps {
   entries: JournalEntry[];
   config: SpiralConfig;
-  tildePlacementActive: boolean;
-  onTildePlaced: (date: Date, position: THREE.Vector3) => void;
+  onTildePlaced: (date: Date) => void;
 }
 
 const SpiralVisualization: React.FC<SpiralVisualizationProps> = ({
   entries,
   config,
-  tildePlacementActive,
   onTildePlaced,
 }) => {
   return (
@@ -47,7 +44,6 @@ const SpiralVisualization: React.FC<SpiralVisualizationProps> = ({
         <SpiralScene
           entries={entries}
           config={config}
-          tildePlacementActive={tildePlacementActive}
           onTildePlaced={onTildePlaced}
         />
       </Canvas>

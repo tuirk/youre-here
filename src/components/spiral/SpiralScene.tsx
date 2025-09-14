@@ -8,19 +8,16 @@ import { EntryVisualizations } from "./EventVisualizations";
 import { DayMarkers } from "./DayMarkers";
 import { TodayMarker } from "./TodayMarker";
 import { TildePlacement } from "./TildePlacement";
-import * as THREE from "three";
 
 interface SpiralSceneProps {
   entries: JournalEntry[];
   config: SpiralConfig;
-  tildePlacementActive: boolean;
-  onTildePlaced: (date: Date, position: THREE.Vector3) => void;
+  onTildePlaced: (date: Date) => void;
 }
 
 export const SpiralScene: React.FC<SpiralSceneProps> = ({
   entries,
   config,
-  tildePlacementActive,
   onTildePlaced,
 }) => {
   const { camera } = useThree();
@@ -91,7 +88,6 @@ export const SpiralScene: React.FC<SpiralSceneProps> = ({
         today={today}
         zoom={config.zoom}
         onPlaced={onTildePlaced}
-        active={tildePlacementActive}
       />
 
       <EntryVisualizations

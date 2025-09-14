@@ -1,34 +1,30 @@
-import React, { useState, useCallback, useRef } from "react";
-import { useThree } from "@react-three/fiber";
+import React, { useState, useCallback } from "react";
 import { Text } from "@react-three/drei";
 import * as THREE from "three";
-import { getDailySpiralCoords, getDayPositions, DAYS_PER_REV } from "@/utils/daily/generateDailySpiralPoints";
+import { getDailySpiralCoords } from "@/utils/daily/generateDailySpiralPoints";
 
 interface TildePlacementProps {
   firstUseDate: Date;
   today: Date;
   zoom: number;
-  onPlaced: (date: Date, position: THREE.Vector3) => void;
-  active: boolean;
+  onPlaced: (date: Date) => void;
 }
 
 /**
- * Handles click-on-spiral → tilde marker placement.
- * Raycasts against an invisible tube around the spiral to find the nearest point,
- * then shows a ~ marker with a date label.
+ * Always-active click target around the spiral.
+ * Click anywhere on the spiral → tilde appears → popup opens.
+ * No activation step needed.
  */
 export const TildePlacement: React.FC<TildePlacementProps> = ({
   firstUseDate,
   today,
   zoom,
   onPlaced,
-  active,
 }) => {
   const [tildePos, setTildePos] = useState<THREE.Vector3 | null>(null);
   const [tildeDate, setTildeDate] = useState<Date | null>(null);
-  const meshRef = useRef<THREE.Mesh>(null);
 
-  // Build a tube geometry around the spiral for raycasting
+  // Wider tube for easier clicking
   const tubeGeometry = React.useMemo(() => {
     const start = new Date(firstUseDate);
     start.setHours(0, 0, 0, 0);
@@ -36,7 +32,6 @@ export const TildePlacement: React.FC<TildePlacementProps> = ({
     end.setHours(0, 0, 0, 0);
     const totalDays = Math.max(1, Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
 
-    // Create curve points along the spiral
     const curvePoints: THREE.Vector3[] = [];
     const steps = Math.max(10, totalDays * 2);
     for (let i = 0; i <= steps; i++) {
@@ -46,23 +41,24 @@ export const TildePlacement: React.FC<TildePlacementProps> = ({
     }
 
     const curve = new THREE.CatmullRomCurve3(curvePoints);
-    return new THREE.TubeGeometry(curve, steps, 0.3, 8, false);
+    // Wider tube (0.6) for easier click targeting
+    return new THREE.TubeGeometry(curve, steps, 0.6, 8, false);
   }, [firstUseDate, today, zoom]);
 
   const handleClick = useCallback(
-    (e: THREE.Event & { point?: THREE.Vector3 }) => {
-      if (!active || !e.point) return;
-      e.stopPropagation?.();
+    (e: any) => {
+      if (!e.point) return;
+      e.stopPropagation();
 
       const clickPoint = e.point as THREE.Vector3;
 
-      // Find nearest day on the spiral
       const start = new Date(firstUseDate);
       start.setHours(0, 0, 0, 0);
       const end = new Date(today);
       end.setHours(0, 0, 0, 0);
       const totalDays = Math.max(1, Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
 
+      // Sample every day to find closest
       let bestDist = Infinity;
       let bestDay = 0;
 
@@ -83,9 +79,9 @@ export const TildePlacement: React.FC<TildePlacementProps> = ({
 
       setTildePos(pos);
       setTildeDate(date);
-      onPlaced(date, pos);
+      onPlaced(date);
     },
-    [active, firstUseDate, today, zoom, onPlaced]
+    [firstUseDate, today, zoom, onPlaced]
   );
 
   const formatDate = (d: Date) => {
@@ -93,18 +89,25 @@ export const TildePlacement: React.FC<TildePlacementProps> = ({
     return `~ ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
   };
 
+  // Clear tilde after a few seconds
+  React.useEffect(() => {
+    if (!tildePos) return;
+    const timer = setTimeout(() => {
+      setTildePos(null);
+      setTildeDate(null);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [tildePos]);
+
   return (
     <>
-      {/* Invisible clickable tube around the spiral */}
       <mesh
-        ref={meshRef}
         geometry={tubeGeometry}
         onClick={handleClick}
       >
-        <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} depthWrite={false} colorWrite={false} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
       </mesh>
 
-      {/* Tilde marker */}
       {tildePos && tildeDate && (
         <group position={tildePos}>
           <Text
