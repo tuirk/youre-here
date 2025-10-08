@@ -1,88 +1,87 @@
-
 import React, { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { TimeEvent } from "@/types/event";
-import { getDailyEventPosition } from "@/utils/daily/dailyEventPositioning";
+import { JournalEntry } from "@/types/event";
+import { getDailySpiralCoords } from "@/utils/daily/generateDailySpiralPoints";
 
-interface EventPointProps {
-  event: TimeEvent;
+interface EntryPointProps {
+  entry: JournalEntry;
   firstUseDate: Date;
   zoom: number;
   onClick?: () => void;
 }
 
-export const EventPoint: React.FC<EventPointProps> = ({
-  event,
+export const EntryPoint: React.FC<EntryPointProps> = ({
+  entry,
   firstUseDate,
   zoom,
-  onClick
+  onClick,
 }) => {
-  // Get position on the daily spiral
-  const position = getDailyEventPosition(event, firstUseDate, 2 * zoom, 0.8 * zoom, 1.2 * zoom);
-  
-  // Reference for animation
+  const color = entry.sentiment?.color || "#aaaaaa";
+  const intensity = entry.sentiment?.intensity ?? 0.5;
+
+  // Calculate position from anchorDate
+  const position = useMemo(() => {
+    const start = new Date(firstUseDate);
+    start.setHours(0, 0, 0, 0);
+    const anchor = new Date(entry.anchorDate);
+    anchor.setHours(0, 0, 0, 0);
+    const dayIndex = Math.max(0, Math.floor((anchor.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    const { x, y, z } = getDailySpiralCoords(dayIndex, 2 * zoom, 0.8 * zoom, 1.2 * zoom);
+    return new THREE.Vector3(x, y, z);
+  }, [entry.anchorDate, firstUseDate, zoom]);
+
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Sprite>(null);
-  
-  // Create a texture for the glow effect using useMemo to prevent recreation on every render
+
   const glowTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 64;
     canvas.height = 64;
-    const context = canvas.getContext("2d");
-    if (context) {
-      const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
       gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
       gradient.addColorStop(0.3, "rgba(255, 255, 255, 0.5)");
       gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
-      context.fillStyle = gradient;
-      context.fillRect(0, 0, 64, 64);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 64, 64);
     }
     return new THREE.CanvasTexture(canvas);
   }, []);
-  
-  // Create a pulsing animation for the point
+
   useFrame((state) => {
+    const time = state.clock.getElapsedTime();
     if (meshRef.current) {
-      const time = state.clock.getElapsedTime();
-      // Pulse effect based on time and event intensity
-      const pulseScale = 1 + Math.sin(time * 1.5) * 0.1 * (event.intensity / 10);
-      meshRef.current.scale.set(pulseScale, pulseScale, pulseScale);
+      const pulse = 1 + Math.sin(time * 1.5) * 0.1 * intensity;
+      meshRef.current.scale.set(pulse, pulse, pulse);
     }
-    
     if (glowRef.current) {
-      const time = state.clock.getElapsedTime();
-      // Independent pulse for the glow
-      const glowScale = 1 + Math.sin(time * 2.2) * 0.15;
-      glowRef.current.scale.set(glowScale, glowScale, 1);
+      const glow = 1 + Math.sin(time * 2.2) * 0.15;
+      glowRef.current.scale.set(glow, glow, 1);
     }
   });
-  
-  // Calculate size based on event intensity (1-10)
-  // Reduced by 25% for all event points
-  const size = 0.0375 + (event.intensity / 10) * 0.075; // Reduced from 0.05/0.1
-  
+
+  const size = 0.04 + intensity * 0.07;
+  const glowSize = 0.45 + intensity * 0.5;
+
   return (
     <group position={position} onClick={onClick}>
-      {/* Core particle - small but visible */}
       <mesh ref={meshRef}>
         <sphereGeometry args={[size, 8, 8]} />
-        <meshStandardMaterial 
-          color={event.color} 
-          transparent 
+        <meshStandardMaterial
+          color={color}
+          transparent
           opacity={0.9}
-          emissive={event.color}
+          emissive={color}
           emissiveIntensity={1.5}
         />
       </mesh>
-      
-      {/* Glow effect for one-time events */}
-      <sprite ref={glowRef} scale={[0.45 + event.intensity * 0.06, 0.45 + event.intensity * 0.06, 1]}>
-        <spriteMaterial 
-          map={glowTexture} 
-          color={event.color} 
-          transparent 
+      <sprite ref={glowRef} scale={[glowSize, glowSize, 1]}>
+        <spriteMaterial
+          map={glowTexture}
+          color={color}
+          transparent
           opacity={0.7}
           blending={THREE.AdditiveBlending}
         />

@@ -1,13 +1,13 @@
 import React, { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { TimeEvent } from "@/types/event";
+import { JournalEntry } from "@/types/event";
 import { getDayPositions } from "@/utils/daily/generateDailySpiralPoints";
 
 interface DayMarkersProps {
   firstUseDate: Date;
   today: Date;
-  events: TimeEvent[];
+  entries: JournalEntry[];
   baseRadius?: number;
   radiusGrowth?: number;
   heightPerRev?: number;
@@ -20,7 +20,7 @@ interface DayMarkersProps {
 export const DayMarkers: React.FC<DayMarkersProps> = ({
   firstUseDate,
   today,
-  events,
+  entries,
   baseRadius = 2,
   radiusGrowth = 0.8,
   heightPerRev = 1.2,
@@ -30,12 +30,12 @@ export const DayMarkers: React.FC<DayMarkersProps> = ({
   const { positions, count } = useMemo(() => {
     const dayPoints = getDayPositions(firstUseDate, today, baseRadius, radiusGrowth, heightPerRev);
 
-    // Build a set of dates that have events (so we skip those)
-    const eventDates = new Set<string>();
-    events.forEach((ev) => {
-      const d = new Date(ev.startDate);
+    // Build a set of dates that have entries (so we skip those)
+    const entryDates = new Set<string>();
+    entries.forEach((e) => {
+      const d = new Date(e.anchorDate);
       d.setHours(0, 0, 0, 0);
-      eventDates.add(d.toISOString().slice(0, 10));
+      entryDates.add(d.toISOString().slice(0, 10));
     });
 
     // Also skip today (TodayMarker handles it)
@@ -44,7 +44,7 @@ export const DayMarkers: React.FC<DayMarkersProps> = ({
     // Filter to only empty days
     const emptyDays = dayPoints.filter((p) => {
       const dateStr = p.date.toISOString().slice(0, 10);
-      return dateStr !== todayStr && !eventDates.has(dateStr);
+      return dateStr !== todayStr && !entryDates.has(dateStr);
     });
 
     return { positions: emptyDays, count: emptyDays.length };

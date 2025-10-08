@@ -1,23 +1,27 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import { useThree } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
-import { TimeEvent, SpiralConfig } from "@/types/event";
+import { JournalEntry, SpiralConfig } from "@/types/event";
 import { SpiralLine } from "./SpiralLine";
 import { MonthMarkers } from "./MonthMarkers";
-import { EventVisualizations } from "./EventVisualizations";
+import { EntryVisualizations } from "./EventVisualizations";
 import { DayMarkers } from "./DayMarkers";
 import { TodayMarker } from "./TodayMarker";
+import { TildePlacement } from "./TildePlacement";
+import * as THREE from "three";
 
 interface SpiralSceneProps {
-  events: TimeEvent[];
+  entries: JournalEntry[];
   config: SpiralConfig;
-  onEventClick: (year: number, month: number, x: number, y: number) => void;
+  tildePlacementActive: boolean;
+  onTildePlaced: (date: Date, position: THREE.Vector3) => void;
 }
 
 export const SpiralScene: React.FC<SpiralSceneProps> = ({
-  events,
+  entries,
   config,
-  onEventClick
+  tildePlacementActive,
+  onTildePlaced,
 }) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
@@ -68,7 +72,7 @@ export const SpiralScene: React.FC<SpiralSceneProps> = ({
       <DayMarkers
         firstUseDate={firstUseDate}
         today={today}
-        events={events}
+        entries={entries}
         baseRadius={2 * config.zoom}
         radiusGrowth={0.8 * config.zoom}
         heightPerRev={1.2 * config.zoom}
@@ -82,10 +86,17 @@ export const SpiralScene: React.FC<SpiralSceneProps> = ({
         heightPerRev={1.2 * config.zoom}
       />
 
-      <EventVisualizations
-        events={events}
+      <TildePlacement
+        firstUseDate={firstUseDate}
+        today={today}
+        zoom={config.zoom}
+        onPlaced={onTildePlaced}
+        active={tildePlacementActive}
+      />
+
+      <EntryVisualizations
+        entries={entries}
         config={config}
-        onEventClick={onEventClick}
       />
     </>
   );

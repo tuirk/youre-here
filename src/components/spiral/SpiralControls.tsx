@@ -1,41 +1,38 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ListIcon } from "lucide-react";
+import { ListIcon, Plus } from "lucide-react";
 
 interface SpiralControlsProps {
-  onJournalTodayClick: () => void;
-  onAddMemoryClick: () => void;
-  onViewMemoriesClick: () => void;
+  onNewEntryClick: () => void;
+  onViewEntriesClick: () => void;
+  placementActive: boolean;
 }
 
 export const SpiralControls: React.FC<SpiralControlsProps> = ({
-  onJournalTodayClick,
-  onAddMemoryClick,
-  onViewMemoriesClick,
+  onNewEntryClick,
+  onViewEntriesClick,
+  placementActive,
 }) => {
   return (
-    <div className="absolute top-4 right-4 flex flex-col items-end gap-4 bg-background/30 backdrop-blur-sm p-4 rounded-lg border border-white/10 shadow-lg">
+    <div className="absolute top-4 right-4 flex flex-col items-end gap-3 bg-background/30 backdrop-blur-sm p-4 rounded-lg border border-white/10 shadow-lg">
       <Button
-        onClick={onJournalTodayClick}
-        className="bg-cosmic-nebula-purple text-white hover:bg-cosmic-nebula-purple/90"
+        onClick={onNewEntryClick}
+        className={`text-white border border-white/10 ${
+          placementActive
+            ? "bg-white/20 hover:bg-white/30"
+            : "bg-white/10 hover:bg-white/20"
+        }`}
       >
-        Journal Today
+        <Plus className="mr-2 h-4 w-4" />
+        {placementActive ? "Tap the spiral..." : "New Entry"}
       </Button>
       <Button
-        onClick={onAddMemoryClick}
         variant="outline"
-        className="border-cosmic-nebula-purple/50 text-cosmic-nebula-purple hover:bg-cosmic-nebula-purple/10"
-      >
-        Add Memory
-      </Button>
-      <Button 
-        variant="outline" 
-        className="border-cosmic-nebula-teal text-cosmic-nebula-teal hover:bg-cosmic-nebula-teal/10"
-        onClick={onViewMemoriesClick}
+        className="border-white/10 text-white/60 hover:bg-white/5"
+        onClick={onViewEntriesClick}
       >
         <ListIcon className="mr-2 h-4 w-4" />
-        View Memories
+        Entries
       </Button>
     </div>
   );
