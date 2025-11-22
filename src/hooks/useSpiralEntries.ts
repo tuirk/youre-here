@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { JournalEntry, SpiralConfig } from "@/types/event";
-import { saveEntry, getEntries, saveConfig, getConfig, deleteEntry, getFirstUseDate } from "@/utils/storage";
+import { saveEntry, getEntries, updateEntry, saveConfig, getConfig, deleteEntry, getFirstUseDate } from "@/utils/storage";
 import { useToast } from "@/hooks/use-toast";
+import { analyzeEntry } from "@/services/gemini";
+import { mapSentimentToColor } from "@/utils/colorMapping";
+
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 
 export const useSpiralEntries = () => {
   const { toast } = useToast();
@@ -17,7 +21,6 @@ export const useSpiralEntries = () => {
     centerY: window.innerHeight / 2,
   });
 
-  // Tilde placement state
   const [tildePlacementActive, setTildePlacementActive] = useState(false);
   const [anchorDate, setAnchorDate] = useState<Date | null>(null);
   const [showEntryPopup, setShowEntryPopup] = useState(false);
@@ -41,14 +44,53 @@ export const useSpiralEntries = () => {
     setTildePlacementActive(true);
   }, []);
 
+  // Analyze entry with Gemini in background, then update
+  const runSentimentAnalysis = useCallback(async (entry: JournalEntry) => {
+    if (!GEMINI_API_KEY) {
+      console.warn("No VITE_GEMINI_API_KEY set — skipping sentiment analysis");
+      return;
+    }
+
+    const result = await analyzeEntry(entry.text, GEMINI_API_KEY);
+    if (!result) return;
+
+    const color = mapSentimentToColor(result.categories, result.intensity);
+
+    const updated: JournalEntry = {
+      ...entry,
+      sentiment: {
+        color,
+        intensity: result.intensity,
+        categories: result.categories,
+      },
+      temporalScope: result.temporalScope,
+    };
+
+    // If there's an endDateOffset, calculate the endDate
+    if (result.endDateOffset && result.temporalScope !== "point") {
+      const anchor = new Date(entry.anchorDate);
+      const end = new Date(anchor);
+      end.setDate(end.getDate() + result.endDateOffset);
+      updated.endDate = end.toISOString();
+    }
+
+    updateEntry(updated);
+    setEntries((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+  }, []);
+
   const handleSaveEntry = useCallback((entry: JournalEntry) => {
+    // Save immediately with no sentiment (renders as neutral gray)
     saveEntry(entry);
     setEntries((prev) => [...prev, entry]);
+
     toast({
       title: "Saved",
       description: "Your entry has been added to the spiral",
     });
-  }, [toast]);
+
+    // Fire sentiment analysis in background — color fades in when ready
+    runSentimentAnalysis(entry);
+  }, [toast, runSentimentAnalysis]);
 
   const handleDeleteEntry = useCallback((entryId: string) => {
     deleteEntry(entryId);
