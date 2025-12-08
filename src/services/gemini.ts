@@ -86,3 +86,55 @@ export const analyzeEntry = async (
     return null;
   }
 };
+
+// --- Region summary generation ---
+
+const SUMMARY_PROMPT = `You are a reflective journal companion. Given a set of journal entries from around the same time period, write a brief 1-2 sentence summary of that period.
+
+Tone: warm, observational, reflective — like a thoughtful friend looking back. Not clinical or formal.
+
+Example: "A heavy week — you kept returning to the conversation with your mother. Some brightness around Wednesday when coffee with a friend broke through."
+
+Return ONLY the summary text, no quotes, no explanation.`;
+
+export const generateRegionSummary = async (
+  entries: JournalEntry[],
+  apiKey: string
+): Promise<string | null> => {
+  if (entries.length === 0) return null;
+
+  const entriesText = entries
+    .map((e) => {
+      const d = new Date(e.anchorDate);
+      return `[${d.toLocaleDateString()}] ${e.text}`;
+    })
+    .join("\n\n");
+
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: SUMMARY_PROMPT },
+              { text: `Journal entries:\n${entriesText}` },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 200,
+        },
+      }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+  } catch {
+    return null;
+  }
+};
