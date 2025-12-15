@@ -1,9 +1,9 @@
 import React from "react";
 import { SpiralVisualization } from "@/components/spiral";
 import EntryPopup from "@/components/journal/EntryPopup";
+import EntryLog from "@/components/journal/EntryLog";
 import { SpiralControls } from "@/components/spiral/SpiralControls";
 import { SpiralHelp } from "@/components/spiral/SpiralHelp";
-import { MemoryList } from "@/components/spiral/MemoryList";
 import { useSpiralEntries } from "@/hooks/useSpiralEntries";
 
 const Spiral: React.FC = () => {
@@ -40,19 +40,11 @@ const Spiral: React.FC = () => {
 
       <SpiralHelp viewType="annual" currentYear={currentYear} />
 
-      {/* Reuse MemoryList as entry log for now — replaced in Phase 3 */}
-      <MemoryList
-        events={entries.map((e) => ({
-          id: e.id,
-          title: e.text.slice(0, 60) + (e.text.length > 60 ? "..." : ""),
-          color: e.sentiment?.color || "#aaaaaa",
-          intensity: Math.round((e.sentiment?.intensity ?? 0.5) * 10),
-          startDate: new Date(e.anchorDate),
-          eventType: "one-time" as const,
-        }))}
+      <EntryLog
+        entries={entries}
         open={showEntryLog}
         onOpenChange={setShowEntryLog}
-        onDeleteEvent={handleDeleteEntry}
+        onDeleteEntry={handleDeleteEntry}
       />
 
       <EntryPopup
