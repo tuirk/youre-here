@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { JournalEntry, SpiralConfig } from "@/types/event";
-import { saveEntry, getEntries, updateEntry, saveConfig, getConfig, deleteEntry, getFirstUseDate } from "@/utils/storage";
+import { saveEntry, getEntries, updateEntry, saveEntries, saveConfig, getConfig, deleteEntry, getFirstUseDate, setFirstUseDate } from "@/utils/storage";
 import { useToast } from "@/hooks/use-toast";
 import { analyzeEntry } from "@/services/gemini";
 import { mapSentimentToColor } from "@/utils/colorMapping";
+import { generateSeedData } from "@/utils/seedData";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 
@@ -27,7 +28,21 @@ export const useSpiralEntries = () => {
   const [showEntryLog, setShowEntryLog] = useState(false);
 
   useEffect(() => {
-    const savedEntries = getEntries();
+    let savedEntries = getEntries();
+
+    // Seed demo data on first visit
+    if (savedEntries.length === 0) {
+      const seed = generateSeedData();
+      saveEntries(seed);
+      savedEntries = seed;
+      // Set firstUseDate to earliest entry so the spiral spans the demo data
+      const earliest = seed.reduce((min, e) => {
+        const d = new Date(e.anchorDate);
+        return d < min ? d : min;
+      }, new Date());
+      setFirstUseDate(earliest);
+    }
+
     setEntries(savedEntries);
     getFirstUseDate();
     const savedConfig = getConfig();
