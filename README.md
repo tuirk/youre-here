@@ -1,69 +1,96 @@
-# Welcome to your Lovable project
+# You're Here
 
-## Project info
+A reflective spiral journal where the interface is the art. You write or speak naturally, and AI maps your entries onto a growing 3D spiral as colored particle clusters. No mood pickers, no forms, no sliders. Just you, thinking out loud — and the spiral paints itself.
 
-**URL**: https://lovable.dev/projects/1d45a376-c9ec-455b-97fd-1acd3ec777d6
+This is a creative sprint project. It started from a simple question about awareness.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## Why This Exists
 
-**Use Lovable**
+The other day someone asked me, "Is *Feeling Good* the only book you ever read?"
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1d45a376-c9ec-455b-97fd-1acd3ec777d6) and start prompting.
+Well, no. But it's the one I remember the most clearly. Because it doesn't try to sell you an idea and ask you to figure it out. It hands you tools. And my favorite part of these tools is that they're not aiming to *solve*. They're tools to make you *aware*. Without being aware, you can't figure things out on your own, or can't properly apply other tools.
 
-Changes made via Lovable will be committed automatically to this repo.
+That difference — between solving and seeing — ended up shaping how I move through things. So it's not surprising that out of dozens of tiny project ideas scattered across my notes, this is the one I chose to build.
 
-**Use your preferred IDE**
+The glowing spiral you see here is called **You're Here**.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+It's a cosmic mood journal built on two foundations:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**David D. Burns' memory reflection exercise from *Feeling Good*.** In it, you're asked to recall a moment when you felt particularly bad or surprisingly good, and try to step fully back into that moment. What usually happens is, you can't. There's a gap between the intensity of the emotion and your current awareness — you can't truly reconstruct it when you're no longer in that state. That gap between memory and emotion becomes data, and it changes how you relate to memory itself.
 
-Follow these steps:
+**A very human need to feel anchored while still floating — but not being stuck.** So I made a place for that. Where the center isn't *what* happened, but *how it felt*. Where you can place something in a single moment, or stretched across a time period, and see it alongside everything else.
+
+It isn't about avoiding what we prefer to call "bad." In fact, it's partly about honoring it — letting it take its place in the map. Because when you place it, you can see it. It's real, it happened, and it passed. You don't fall into what Burns calls the *mental filter* — only remembering the hard parts and letting them color everything else.
+
+When you place them next to the moments that felt warm or weird or okay, you get a wider view. You start to see that even in chaos, there were other moments too.
+
+Just tracking your thoughts and feelings begins to shift how they sit in your mind, in a way that gives you perspective. And once you have perspective, you're not trapped inside it anymore.
+
+You're here.
+
+---
+
+## What the AI Does
+
+The spiral's colors, intensity, and shape are never chosen by you — they're derived by AI from your writing. You just think out loud.
+
+### Sentiment Analysis
+When you submit an entry, Gemini analyzes your text for emotional content. It handles nuance: *"I keep telling myself it's fine but I can't sleep"* is anxiety, not positivity. Mixed emotions are valid — joy and sadness can coexist, and the spiral shows that through blended colors.
+
+| What you feel | How it looks |
+|---|---|
+| Joy, contentment | Warm yellows, oranges |
+| Sadness, grief | Deep blues |
+| Anger, frustration | Reds |
+| Anxiety, fear | Cool teals, cyans |
+| Love, connection | Warm pinks, magentas |
+| Hope, anticipation | Greens |
+| Mixed, ambivalent | Blended purples |
+| Neutral, calm | Soft whites, grays |
+
+### Temporal Understanding
+The AI reads time from your words:
+- *"today I felt..."* → a single point on the spiral
+- *"the past two weeks have been..."* → a colored smear across that time range
+- *"next month I'm nervous about..."* → diffuse, ghostly particles projected forward
+
+### Region Summaries
+When you hover over a region of the spiral, you see an AI-generated summary of that period — warm, reflective, observational. Not clinical. Like a thoughtful friend looking back: *"A heavy week — you kept returning to the conversation with your mother. Some brightness around Wednesday when coffee with a friend broke through."*
+
+### Speech-to-Text
+Hit the microphone button and speak. Whisper transcribes your voice into text, so you can journal by thinking out loud — literally.
+
+---
+
+## Getting Started
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone https://github.com/tuirk/youre-here.git
+cd youre-here
+npm install
+cp .env.example .env   # add your API keys
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open [http://localhost:8080](http://localhost:8080).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Environment Variables
 
-**Use GitHub Codespaces**
+| Variable | Required | Description |
+|---|---|---|
+| `VITE_GEMINI_API_KEY` | Yes | [Gemini API key](https://aistudio.google.com/apikey) for sentiment analysis |
+| `VITE_GROQ_API_KEY` | Optional | [Groq API key](https://console.groq.com) for Whisper speech-to-text |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+On first visit with no entries, the spiral loads with demo data spanning ~5 months — overlapping feelings, recurring themes, and forward projections — so you can see what a lived-in spiral looks like.
 
-## What technologies are used for this project?
+---
 
-This project is built with .
+## Tech Stack
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/1d45a376-c9ec-455b-97fd-1acd3ec777d6) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+- **React** + **TypeScript** + **Vite**
+- **Three.js** (react-three-fiber) — 3D spiral visualization
+- **Tailwind CSS** + **shadcn/ui** — dark cosmic UI
+- **Gemini API** — sentiment analysis, temporal parsing, region summaries
+- **Whisper** (via Groq) — speech-to-text
