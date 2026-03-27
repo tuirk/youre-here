@@ -1,4 +1,3 @@
-
 import React from "react";
 import { SpiralVisualization } from "@/components/spiral";
 import EventForm from "@/components/EventForm";
@@ -18,46 +17,44 @@ const Spiral: React.FC = () => {
     showMemoryList,
     setShowMemoryList,
     handleSpiralClick,
+    handleJournalToday,
     handleSaveEvent,
     handleDeleteEvent,
     currentYear
   } = useSpiralEvents();
-  
+
+  const firstUseYear = new Date(config.firstUseDate).getFullYear();
+
   return (
     <div className="w-full h-screen">
-      {/* Spiral visualization */}
-      <SpiralVisualization 
-        events={events} 
-        config={config} 
-        onSpiralClick={handleSpiralClick} 
+      <SpiralVisualization
+        events={events}
+        config={config}
+        onSpiralClick={handleSpiralClick}
       />
-      
-      {/* Controls */}
-      <SpiralControls 
+
+      <SpiralControls
+        onJournalTodayClick={handleJournalToday}
         onAddMemoryClick={() => setShowEventForm(true)}
         onViewMemoriesClick={() => setShowMemoryList(true)}
-        viewType="annual"
       />
-      
-      {/* Help button */}
+
       <SpiralHelp viewType="annual" currentYear={currentYear} />
-      
-      {/* Memory List Dialog */}
-      <MemoryList 
+
+      <MemoryList
         events={events}
         open={showMemoryList}
         onOpenChange={setShowMemoryList}
         onDeleteEvent={handleDeleteEvent}
       />
-      
-      {/* Add event form */}
+
       <EventForm
         open={showEventForm}
         onClose={() => setShowEventForm(false)}
         onSave={handleSaveEvent}
         preselectedYear={selectedYear}
         preselectedMonth={selectedMonth}
-        startYear={currentYear - 5}
+        startYear={firstUseYear}
         currentYear={currentYear}
       />
     </div>

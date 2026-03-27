@@ -4,27 +4,23 @@ import { Line } from "@react-three/drei";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { TimeEvent } from "@/types/event";
-import { calculateSpiralSegment } from "@/utils/spiralUtils";
+import { calculateDailySpiralSegment } from "@/utils/daily/dailyDurationSegments";
 import { isSeasonalEvent } from "@/utils/seasonalUtils";
 import { ParticleLayer } from "./particles/ParticleLayer";
 import { useGenerateParticles } from "./particles/ParticleGenerator";
 
 interface EventDurationProps {
-  startEvent: TimeEvent;   // Event that marks the start of the duration
-  endEvent: TimeEvent;     // Event that marks the end of the duration
-  startYear: number;       // First year of the spiral (used for positioning)
-  zoom: number;            // Current zoom level (affects visual scale)
+  startEvent: TimeEvent;
+  endEvent: TimeEvent;
+  firstUseDate: Date;
+  zoom: number;
 }
 
-/**
- * Renders a cosmic dust trail between two events on the spiral, representing a duration
- * Inspired by deep space nebula imagery
- */
-export const EventDuration: React.FC<EventDurationProps> = ({ 
-  startEvent, 
-  endEvent, 
-  startYear, 
-  zoom 
+export const EventDuration: React.FC<EventDurationProps> = ({
+  startEvent,
+  endEvent,
+  firstUseDate,
+  zoom
 }) => {
   // Calculate if this is a minimal duration (no end date or same as start date)
   const isMinimalDuration = !startEvent.endDate || 
@@ -36,14 +32,14 @@ export const EventDuration: React.FC<EventDurationProps> = ({
   
   // Generate points for a smooth curve between the two events
   // More points for longer spans to ensure smooth curves
-  const points = calculateSpiralSegment(
-    startEvent, 
-    endEvent, 
-    startYear, 
-    // Ensure we have more points for longer spans
+  const points = calculateDailySpiralSegment(
+    startEvent,
+    endEvent,
+    firstUseDate,
     isMinimalDuration ? 100 : 200 + Math.min(300, spanLengthInDays),
-    5 * zoom, 
-    1.5 * zoom
+    2 * zoom,
+    0.8 * zoom,
+    1.2 * zoom
   );
   
   // Use the color of the start event for the particles

@@ -11,12 +11,13 @@ export interface TimeEvent {
   isRoughDate?: boolean; // Indicates if this is a seasonal rough date
   roughDateSeason?: string; // The season (Spring, Summer, Fall, Winter)
   roughDateYear?: number; // The year for the rough date
-  eventType: "one-time" | "process"; // Explicit event type to differentiate visualization
+  eventType: "one-time" | "process" | "journal"; // Explicit event type to differentiate visualization
 }
 
 export interface SpiralConfig {
   startYear: number;
   currentYear: number;
+  firstUseDate: string; // ISO date string of when user first opened the app
   zoom: number;
   centerX: number;
   centerY: number;

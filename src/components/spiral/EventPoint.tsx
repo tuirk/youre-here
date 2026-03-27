@@ -3,23 +3,23 @@ import React, { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { TimeEvent } from "@/types/event";
-import { getEventPosition } from "@/utils/spiralUtils";
+import { getDailyEventPosition } from "@/utils/daily/dailyEventPositioning";
 
 interface EventPointProps {
   event: TimeEvent;
-  startYear: number;
+  firstUseDate: Date;
   zoom: number;
   onClick?: () => void;
 }
 
-export const EventPoint: React.FC<EventPointProps> = ({ 
-  event, 
-  startYear, 
-  zoom, 
-  onClick 
+export const EventPoint: React.FC<EventPointProps> = ({
+  event,
+  firstUseDate,
+  zoom,
+  onClick
 }) => {
-  // Get position on the spiral
-  const position = getEventPosition(event, startYear, 5 * zoom, 1.5 * zoom);
+  // Get position on the daily spiral
+  const position = getDailyEventPosition(event, firstUseDate, 2 * zoom, 0.8 * zoom, 1.2 * zoom);
   
   // Reference for animation
   const meshRef = useRef<THREE.Mesh>(null);

@@ -4,20 +4,28 @@ import { Button } from "@/components/ui/button";
 import { ListIcon } from "lucide-react";
 
 interface SpiralControlsProps {
+  onJournalTodayClick: () => void;
   onAddMemoryClick: () => void;
   onViewMemoriesClick: () => void;
-  viewType: "annual" | "quarterly";
 }
 
 export const SpiralControls: React.FC<SpiralControlsProps> = ({
+  onJournalTodayClick,
   onAddMemoryClick,
   onViewMemoriesClick,
 }) => {
   return (
     <div className="absolute top-4 right-4 flex flex-col items-end gap-4 bg-background/30 backdrop-blur-sm p-4 rounded-lg border border-white/10 shadow-lg">
-      <Button 
-        onClick={onAddMemoryClick} 
+      <Button
+        onClick={onJournalTodayClick}
         className="bg-cosmic-nebula-purple text-white hover:bg-cosmic-nebula-purple/90"
+      >
+        Journal Today
+      </Button>
+      <Button
+        onClick={onAddMemoryClick}
+        variant="outline"
+        className="border-cosmic-nebula-purple/50 text-cosmic-nebula-purple hover:bg-cosmic-nebula-purple/10"
       >
         Add Memory
       </Button>

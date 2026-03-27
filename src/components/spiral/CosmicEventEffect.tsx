@@ -2,23 +2,23 @@ import React, { useRef, useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { TimeEvent } from "@/types/event";
-import { getEventPosition } from "@/utils/spiralUtils";
+import { getDailyEventPosition } from "@/utils/daily/dailyEventPositioning";
 
 interface CosmicEventEffectProps {
   event: TimeEvent;
-  startYear: number;
+  firstUseDate: Date;
   zoom: number;
   isProcessEvent?: boolean;
 }
 
-export const CosmicEventEffect: React.FC<CosmicEventEffectProps> = ({ 
-  event, 
-  startYear, 
+export const CosmicEventEffect: React.FC<CosmicEventEffectProps> = ({
+  event,
+  firstUseDate,
   zoom,
   isProcessEvent = false
 }) => {
-  // Get the base position on the spiral
-  const position = getEventPosition(event, startYear, 5 * zoom, 1.5 * zoom);
+  // Get the base position on the daily spiral
+  const position = getDailyEventPosition(event, firstUseDate, 2 * zoom, 0.8 * zoom, 1.2 * zoom);
   
   // References for animation
   const particlesRef = useRef<THREE.Points>(null);

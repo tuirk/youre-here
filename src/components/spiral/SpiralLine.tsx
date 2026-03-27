@@ -1,59 +1,41 @@
-
 import React from "react";
 import { Line } from "@react-three/drei";
 import * as THREE from "three";
-import { generateSpiralPoints } from "@/utils/spiralUtils";
+import { generateDailySpiralPoints } from "@/utils/daily/generateDailySpiralPoints";
 
 interface SpiralLineProps {
-  startYear: number;
-  currentYear: number;
+  firstUseDate: Date;
+  today: Date;
   zoom: number;
 }
 
 export const SpiralLine: React.FC<SpiralLineProps> = ({
-  startYear,
-  currentYear,
-  zoom
+  firstUseDate,
+  today,
+  zoom,
 }) => {
-  const minAllowedYear = new Date().getFullYear() - 5;
-  const maxAllowedYear = new Date().getFullYear() + 1;
-  
-  // Generate points for the full spiral
-  const spiralPoints = generateSpiralPoints(
-    startYear, 
-    currentYear, 
-    360, 
-    5 * zoom, 
-    1.5 * zoom
+  const spiralPoints = generateDailySpiralPoints(
+    firstUseDate,
+    today,
+    4,           // stepsPerDay
+    2 * zoom,    // baseRadius
+    0.8 * zoom,  // radiusGrowth
+    1.2 * zoom   // heightPerRev
   );
-  
-  // Extract positions for the spiral line
-  const positions = spiralPoints.map(point => point.position);
-  
-  // Instead of using Float32Array, create an array of THREE.Color objects
-  // that the Line component can handle properly
-  const colors = [];
-  
-  spiralPoints.forEach((point) => {
-    const baseColor = new THREE.Color(0xffffff);
-    
-    // Apply fading to years older than minAllowedYear
-    if (point.year < minAllowedYear) {
-      // Calculate how far back this year is from the minimum allowed
-      const yearsBeyondMin = minAllowedYear - point.year;
-      // 0.3 is minimum opacity, fade more for older years
-      const opacity = Math.max(0.3, 1 - (yearsBeyondMin * 0.15));
-      
-      // Create a silver-gray color for older years
-      const silverGray = new THREE.Color(0x9F9EA1);
-      // Blend with white based on how old the year is
-      baseColor.lerp(silverGray, 0.5 + (yearsBeyondMin * 0.1));
-    }
-    
-    // Push the color to our array
-    colors.push(baseColor);
+
+  const positions = spiralPoints.map((p) => p.position);
+  const totalPoints = spiralPoints.length;
+
+  // Gradient: dim at start → bright at today
+  const colors = spiralPoints.map((_, i) => {
+    const t = totalPoints > 1 ? i / (totalPoints - 1) : 1;
+    const dimColor = new THREE.Color(0x334466);
+    const brightColor = new THREE.Color(0xffffff);
+    return dimColor.clone().lerp(brightColor, t * t);
   });
-  
+
+  if (positions.length < 2) return null;
+
   return (
     <Line
       points={positions}
@@ -61,7 +43,7 @@ export const SpiralLine: React.FC<SpiralLineProps> = ({
       vertexColors={colors}
       lineWidth={1}
       transparent
-      opacity={0.3}
+      opacity={0.35}
     />
   );
 };

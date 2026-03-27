@@ -23,35 +23,17 @@ export const SpiralHelp: React.FC<SpiralHelpProps> = ({ viewType, currentYear })
       </PopoverTrigger>
       <PopoverContent className="w-80 bg-background/80 backdrop-blur-md text-white border-cosmic-nebula-purple/30">
         <div className="space-y-4">
-          {viewType === "annual" ? (
-            <>
-              <h3 className="font-medium text-lg">About "You Are Here"</h3>
-              <p className="text-sm text-gray-300">
-                This 3D spiral represents your personal timeline. Each loop is a year,
-                divided into 12 months.
-              </p>
-              <ul className="text-sm text-gray-300 space-y-2 list-disc pl-5">
-                <li>Click anywhere on the spiral to add a memory at that time.</li>
-                <li>Colored trails represent events in your life.</li>
-                <li>You can add memories from {currentYear - 5} to {currentYear + 1}.</li>
-                <li>Drag to rotate the view and scroll to zoom in/out.</li>
-              </ul>
-            </>
-          ) : (
-            <>
-              <h3 className="font-medium text-lg">Quarterly Timeline View</h3>
-              <p className="text-sm text-gray-300">
-                This 3D spiral represents the current year, divided into quarters.
-              </p>
-              <ul className="text-sm text-gray-300 space-y-2 list-disc pl-5">
-                <li>Each coil represents 3 months (one quarter).</li>
-                <li>The visualization starts from January 1st of the current year.</li>
-                <li>Click anywhere on the spiral to add a memory at that time.</li>
-                <li>Colored trails represent events in your life.</li>
-                <li>Drag to rotate the view and scroll to zoom in/out.</li>
-              </ul>
-            </>
-          )}
+          <h3 className="font-medium text-lg">About "You Are Here"</h3>
+          <p className="text-sm text-gray-300">
+            Your spiral grows each day. Each loop is one month. The golden
+            marker is today.
+          </p>
+          <ul className="text-sm text-gray-300 space-y-2 list-disc pl-5">
+            <li>Hit "Journal Today" to capture a moment.</li>
+            <li>Faint rings mark days you haven't journaled.</li>
+            <li>Colored glows are your memories.</li>
+            <li>Drag to rotate, scroll to zoom.</li>
+          </ul>
         </div>
       </PopoverContent>
     </Popover>
