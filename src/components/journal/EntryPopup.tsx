@@ -19,8 +19,6 @@ const formatDateLabel = (d: Date) => {
   return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 };
 
-const WHISPER_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
-
 const EntryPopup: React.FC<EntryPopupProps> = ({
   open,
   onClose,
