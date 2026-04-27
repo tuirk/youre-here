@@ -9,6 +9,7 @@ interface SpiralVisualizationProps {
   config: SpiralConfig;
   onTildePlaced: (date: Date) => void;
   onHover: (info: HoverInfo | null) => void;
+  onTodayClick?: () => void;
 }
 
 const SpiralVisualization: React.FC<SpiralVisualizationProps> = ({
@@ -16,6 +17,7 @@ const SpiralVisualization: React.FC<SpiralVisualizationProps> = ({
   config,
   onTildePlaced,
   onHover,
+  onTodayClick,
 }) => {
   return (
     <div className="w-full h-full">
@@ -49,6 +51,7 @@ const SpiralVisualization: React.FC<SpiralVisualizationProps> = ({
           config={config}
           onTildePlaced={onTildePlaced}
           onHover={onHover}
+          onTodayClick={onTodayClick}
         />
       </Canvas>
     </div>

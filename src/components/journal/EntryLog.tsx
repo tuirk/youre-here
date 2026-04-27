@@ -11,6 +11,8 @@ interface EntryLogProps {
   onDeleteEntry: (id: string) => void;
   onDeleteMultiple: (ids: string[]) => void;
   onEntryClick?: (entry: JournalEntry) => void;
+  title?: string;
+  emptyAction?: { label: string; onClick: () => void };
 }
 
 const formatDate = (iso: string) => {
@@ -24,6 +26,8 @@ const EntryLog: React.FC<EntryLogProps> = ({
   onOpenChange,
   onDeleteMultiple,
   onEntryClick,
+  title = "Entries",
+  emptyAction,
 }) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -62,31 +66,35 @@ const EntryLog: React.FC<EntryLogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="!bg-black/50 backdrop-blur-2xl text-white border-white/[0.06] max-w-2xl rounded-2xl shadow-2xl shadow-black/60">
+      <DialogContent className="!bg-[rgba(12,12,20,0.94)] backdrop-blur-xl text-white border-white/[0.08] max-w-2xl rounded-2xl shadow-2xl shadow-black/70">
         <DialogHeader>
-          <DialogTitle className="text-xl font-extralight tracking-[0.15em] text-white/60">
-            Entries
+          <DialogTitle className="text-xl font-extralight tracking-[0.15em] text-white/[0.92]">
+            {title}
           </DialogTitle>
-          <DialogDescription className="text-white/25 text-xs">
-            {entries.length} on your spiral
+          <DialogDescription className="text-white/70 text-xs">
+            {entries.length === 0
+              ? "nothing here yet"
+              : title === "Entries"
+              ? `${entries.length} on your spiral`
+              : `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`}
           </DialogDescription>
         </DialogHeader>
 
         {/* Select all + delete bar */}
         {entries.length > 0 && (
-          <div className="flex items-center justify-between py-2 border-b border-white/[0.04]">
+          <div className="flex items-center justify-between py-2 border-b border-white/[0.08]">
             <label className="flex items-center gap-2 cursor-pointer group">
               <div
                 onClick={toggleAll}
                 className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors cursor-pointer ${
                   allSelected
-                    ? "border-white/40 bg-white/15"
-                    : "border-white/15 hover:border-white/30"
+                    ? "border-white/60 bg-white/25"
+                    : "border-white/40 hover:border-white/60"
                 }`}
               >
-                {allSelected && <div className="w-1.5 h-1.5 rounded-sm bg-white/60" />}
+                {allSelected && <div className="w-1.5 h-1.5 rounded-sm bg-white/90" />}
               </div>
-              <span className="text-[11px] text-white/25 group-hover:text-white/40">
+              <span className="text-[11px] text-white/70 group-hover:text-white/90">
                 {allSelected ? "Deselect all" : "Select all"}
               </span>
             </label>
@@ -106,9 +114,19 @@ const EntryLog: React.FC<EntryLogProps> = ({
 
         <div className="max-h-[55vh] overflow-y-auto space-y-1.5 py-1 -mx-1 px-1">
           {sorted.length === 0 ? (
-            <p className="text-center py-12 text-white/20 text-sm">
-              No entries yet. Click the spiral to add one.
-            </p>
+            <div className="text-center py-12 space-y-4">
+              <p className="text-white/60 text-sm">
+                {emptyAction ? "Nothing journaled yet." : "No entries yet. Click the spiral to add one."}
+              </p>
+              {emptyAction && (
+                <Button
+                  onClick={emptyAction.onClick}
+                  className="bg-white/15 hover:bg-white/25 text-white border border-white/20 rounded-lg px-6"
+                >
+                  {emptyAction.label}
+                </Button>
+              )}
+            </div>
           ) : (
             sorted.map((entry) => {
               const isSelected = selected.has(entry.id);
@@ -117,8 +135,8 @@ const EntryLog: React.FC<EntryLogProps> = ({
                   key={entry.id}
                   className={`flex items-start gap-3 p-3 rounded-xl transition-colors cursor-pointer ${
                     isSelected
-                      ? "bg-red-400/[0.06] border border-red-400/10"
-                      : "bg-white/[0.02] border border-transparent hover:bg-white/[0.04]"
+                      ? "bg-red-400/[0.1] border border-red-400/25"
+                      : "bg-white/[0.05] border border-white/[0.06] hover:bg-white/[0.09]"
                   }`}
                   onClick={() => onEntryClick?.(entry)}
                 >
@@ -130,35 +148,35 @@ const EntryLog: React.FC<EntryLogProps> = ({
                     }}
                     className={`w-3.5 h-3.5 rounded border flex-shrink-0 mt-1 flex items-center justify-center transition-colors cursor-pointer ${
                       isSelected
-                        ? "border-red-400/50 bg-red-400/20"
-                        : "border-white/10 hover:border-white/25"
+                        ? "border-red-400/70 bg-red-400/30"
+                        : "border-white/40 hover:border-white/60"
                     }`}
                   >
-                    {isSelected && <div className="w-1.5 h-1.5 rounded-sm bg-red-400/80" />}
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-sm bg-red-400" />}
                   </div>
 
                   {/* Color dot */}
                   <div
                     className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1.5"
-                    style={{ backgroundColor: entry.sentiment?.color || "#555" }}
+                    style={{ backgroundColor: entry.sentiment?.color || "#888" }}
                   />
 
                   {/* Content */}
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] text-white/60 leading-relaxed whitespace-pre-wrap break-words">
+                    <p className="text-[13px] text-white/[0.92] leading-relaxed whitespace-pre-wrap break-words">
                       {entry.text}
                     </p>
                     <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-[10px] text-white/20">
+                      <span className="text-[10px] text-white/70">
                         {formatDate(entry.anchorDate)}
                       </span>
                       {entry.sentiment?.categories && (
-                        <span className="text-[10px] text-white/15">
+                        <span className="text-[10px] text-white/55">
                           {entry.sentiment.categories.join(" · ")}
                         </span>
                       )}
                       {entry.temporalScope !== "point" && (
-                        <span className="text-[10px] text-white/10 italic">
+                        <span className="text-[10px] text-white/45 italic">
                           {entry.temporalScope}
                         </span>
                       )}
@@ -169,6 +187,18 @@ const EntryLog: React.FC<EntryLogProps> = ({
             })
           )}
         </div>
+
+        {emptyAction && sorted.length > 0 && (
+          <div className="flex justify-end pt-2 border-t border-white/[0.06]">
+            <Button
+              onClick={emptyAction.onClick}
+              variant="ghost"
+              className="text-white/85 hover:text-white hover:bg-white/10 text-xs"
+            >
+              + {emptyAction.label}
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

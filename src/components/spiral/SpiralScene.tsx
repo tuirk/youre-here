@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
 import { JournalEntry, SpiralConfig } from "@/types/event";
@@ -14,6 +14,7 @@ interface SpiralSceneProps {
   config: SpiralConfig;
   onTildePlaced: (date: Date) => void;
   onHover: (info: import("./TildePlacement").HoverInfo | null) => void;
+  onTodayClick?: () => void;
 }
 
 export const SpiralScene: React.FC<SpiralSceneProps> = ({
@@ -21,16 +22,26 @@ export const SpiralScene: React.FC<SpiralSceneProps> = ({
   config,
   onTildePlaced,
   onHover,
+  onTodayClick,
 }) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
 
   const firstUseDate = useMemo(() => new Date(config.firstUseDate), [config.firstUseDate]);
+
+  // Refresh "today" every minute so the marker stays at the live present date
+  // even if the tab is left open across midnight.
+  const [todayTick, setTodayTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTodayTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d;
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayTick]);
 
   useEffect(() => {
     if (camera) {
@@ -83,6 +94,7 @@ export const SpiralScene: React.FC<SpiralSceneProps> = ({
         baseRadius={2 * config.zoom}
         radiusGrowth={0.8 * config.zoom}
         heightPerRev={1.2 * config.zoom}
+        onClick={onTodayClick}
       />
 
       <TildePlacement

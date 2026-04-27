@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { SpiralVisualization } from "@/components/spiral";
 import EntryPopup from "@/components/journal/EntryPopup";
 import EntryLog from "@/components/journal/EntryLog";
@@ -6,6 +6,11 @@ import { SpiralControls } from "@/components/spiral/SpiralControls";
 import { SpiralHelp } from "@/components/spiral/SpiralHelp";
 import { RegionTooltip } from "@/components/spiral/RegionTooltip";
 import { useSpiralEntries } from "@/hooks/useSpiralEntries";
+
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
 
 const Spiral: React.FC = () => {
   const {
@@ -26,6 +31,23 @@ const Spiral: React.FC = () => {
     currentYear,
   } = useSpiralEntries();
 
+  const [showTodayLog, setShowTodayLog] = useState(false);
+
+  const todayEntries = useMemo(() => {
+    const now = new Date();
+    return entries.filter((e) => isSameDay(new Date(e.anchorDate), now));
+  }, [entries]);
+
+  const handleTodayClick = () => {
+    if (todayEntries.length === 0) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      handleTildePlaced(today);
+    } else {
+      setShowTodayLog(true);
+    }
+  };
+
   return (
     <div className="w-full h-screen">
       <SpiralVisualization
@@ -33,6 +55,7 @@ const Spiral: React.FC = () => {
         config={config}
         onTildePlaced={handleTildePlaced}
         onHover={handleHover}
+        onTodayClick={handleTodayClick}
       />
 
       <SpiralControls
@@ -61,6 +84,24 @@ const Spiral: React.FC = () => {
         onOpenChange={setShowEntryLog}
         onDeleteEntry={handleDeleteEntry}
         onDeleteMultiple={handleDeleteMultiple}
+      />
+
+      <EntryLog
+        entries={todayEntries}
+        open={showTodayLog}
+        onOpenChange={setShowTodayLog}
+        onDeleteEntry={handleDeleteEntry}
+        onDeleteMultiple={handleDeleteMultiple}
+        title="Today"
+        emptyAction={{
+          label: "Journal today",
+          onClick: () => {
+            setShowTodayLog(false);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            handleTildePlaced(today);
+          },
+        }}
       />
 
       <EntryPopup

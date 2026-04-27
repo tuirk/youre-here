@@ -10,7 +10,7 @@
  *   neutral/calm → soft whites, grays
  */
 
-const CATEGORY_COLORS: Record<string, string> = {
+export const CATEGORY_COLORS: Record<string, string> = {
   joy: "#F5A623",      // warm orange-yellow
   sadness: "#2E5BBA",  // deep blue
   anger: "#D94040",    // red
@@ -20,6 +20,21 @@ const CATEGORY_COLORS: Record<string, string> = {
   mixed: "#9B6BB0",    // bruised purple
   neutral: "#B0B0B0",  // soft gray
 };
+
+/**
+ * Public legend — the human-readable label for each category color,
+ * in the order we want to show them in the UI.
+ */
+export const SENTIMENT_LEGEND: { key: string; label: string; color: string }[] = [
+  { key: "joy", label: "joy · contentment", color: CATEGORY_COLORS.joy },
+  { key: "love", label: "love · connection", color: CATEGORY_COLORS.love },
+  { key: "hope", label: "hope · anticipation", color: CATEGORY_COLORS.hope },
+  { key: "sadness", label: "sadness · grief", color: CATEGORY_COLORS.sadness },
+  { key: "anxiety", label: "anxiety · fear", color: CATEGORY_COLORS.anxiety },
+  { key: "anger", label: "anger · frustration", color: CATEGORY_COLORS.anger },
+  { key: "mixed", label: "mixed · ambivalent", color: CATEGORY_COLORS.mixed },
+  { key: "neutral", label: "neutral · calm", color: CATEGORY_COLORS.neutral },
+];
 
 /**
  * Given an array of sentiment categories and an intensity,

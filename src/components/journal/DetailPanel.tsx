@@ -26,49 +26,52 @@ const DetailPanel: React.FC<DetailPanelProps> = ({
   if (!open) return null;
 
   return (
-    <div className={`fixed right-0 top-0 h-full w-96 max-w-[85vw] bg-background/95 backdrop-blur-md border-l border-white/10 shadow-2xl z-50 transform transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"}`}>
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
-        <h2 className="text-lg font-light text-white/80 tracking-wider">This period</h2>
-        <Button variant="ghost" size="icon" onClick={onClose} className="text-white/40 hover:text-white/80">
+    <div
+      className={`fixed right-0 top-0 h-full w-96 max-w-[85vw] backdrop-blur-xl border-l border-white/[0.08] shadow-2xl shadow-black/70 z-50 transform transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"}`}
+      style={{ backgroundColor: "rgba(12, 12, 20, 0.94)" }}
+    >
+      <div className="flex items-center justify-between p-4 border-b border-white/[0.08]">
+        <h2 className="text-lg font-light text-white/[0.92] tracking-wider">This period</h2>
+        <Button variant="ghost" size="icon" onClick={onClose} className="text-white/70 hover:text-white hover:bg-white/10">
           <X className="h-4 w-4" />
         </Button>
       </div>
 
       {regionSummary && (
-        <div className="px-4 py-3 border-b border-white/5">
-          <p className="text-sm text-white/50 italic leading-relaxed">{regionSummary}</p>
+        <div className="px-4 py-3 border-b border-white/[0.08]">
+          <p className="text-sm text-white/80 italic leading-relaxed">{regionSummary}</p>
         </div>
       )}
 
       <div className="overflow-y-auto h-[calc(100%-60px)] p-4 space-y-4">
         {entries.length === 0 ? (
-          <p className="text-white/30 text-center py-8">No entries in this region.</p>
+          <p className="text-white/60 text-center py-8">No entries in this region.</p>
         ) : (
           entries
             .sort((a, b) => new Date(a.anchorDate).getTime() - new Date(b.anchorDate).getTime())
             .map((entry) => (
               <div
                 key={entry.id}
-                className="p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/8 transition-colors"
+                className="p-3 rounded-lg border border-white/[0.08] bg-white/[0.06] hover:bg-white/[0.1] transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <div
                       className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: entry.sentiment?.color || "#aaaaaa" }}
+                      style={{ backgroundColor: entry.sentiment?.color || "#bbb" }}
                     />
-                    <span className="text-xs text-white/30">{formatDate(entry.anchorDate)}</span>
+                    <span className="text-xs text-white/70">{formatDate(entry.anchorDate)}</span>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => onDeleteEntry(entry.id)}
-                    className="text-white/20 hover:text-red-400 h-6 px-2 text-xs"
+                    className="text-white/60 hover:text-red-400 h-6 px-2 text-xs"
                   >
                     Delete
                   </Button>
                 </div>
-                <p className="text-sm text-white/70 mt-2 leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm text-white/[0.92] mt-2 leading-relaxed whitespace-pre-wrap">
                   {entry.text}
                 </p>
               </div>

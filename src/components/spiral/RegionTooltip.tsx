@@ -30,18 +30,18 @@ export const RegionTooltip: React.FC<RegionTooltipProps> = ({
         opacity: visible ? 1 : 0,
       }}
     >
-      <div className="bg-black/60 backdrop-blur-xl border border-white/[0.06] rounded-xl px-4 py-3 max-w-[280px] shadow-2xl shadow-black/50">
-        <p className="text-[10px] text-white/25 tracking-[0.1em] uppercase mb-1.5">
+      <div className="bg-[rgba(12,12,20,0.94)] backdrop-blur-xl border border-white/[0.08] rounded-xl px-4 py-3 max-w-[280px] shadow-2xl shadow-black/70">
+        <p className="text-[10px] text-white/70 tracking-[0.1em] uppercase mb-1.5">
           {dateLabel}
         </p>
         {loading ? (
-          <p className="text-xs text-white/30 italic">reflecting...</p>
+          <p className="text-xs text-white/70 italic">reflecting...</p>
         ) : summary ? (
-          <p className="text-[13px] text-white/55 leading-relaxed font-light">
+          <p className="text-[13px] text-white/[0.92] leading-relaxed font-light">
             {summary}
           </p>
         ) : (
-          <p className="text-xs text-white/25">
+          <p className="text-xs text-white/70">
             {entryCount} {entryCount === 1 ? "entry" : "entries"} here
           </p>
         )}
