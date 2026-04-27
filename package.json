@@ -3,6 +3,27 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "description": "A reflective spiral journal where AI maps your entries onto a 3D spiral as colored particle clusters.",
+  "license": "MIT",
+  "author": "tuirk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tuirk/youre-here.git"
+  },
+  "homepage": "https://github.com/tuirk/youre-here#readme",
+  "bugs": {
+    "url": "https://github.com/tuirk/youre-here/issues"
+  },
+  "keywords": [
+    "journal",
+    "spiral",
+    "three-js",
+    "react",
+    "vite",
+    "gemini",
+    "sentiment-analysis",
+    "creative-coding"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
